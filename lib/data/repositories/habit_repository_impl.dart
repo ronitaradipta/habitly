@@ -1,4 +1,5 @@
 import 'package:habitly/data/datasources/local_data_source.dart';
+import 'package:habitly/data/models/habit_model.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/repositories/habit_repository.dart';
 
@@ -10,9 +11,9 @@ class HabitRepositoryImpl implements HabitRepository {
 
   HabitRepositoryImpl(this._localDataSource, this._userEmail);
 
-  @override
   Future<void> loadFromStorage() async {
-    _habits = await _localDataSource.getHabits(_userEmail);
+    final models = await _localDataSource.getHabits(_userEmail);
+    _habits = models.map((m) => m.toEntity()).toList();
   }
 
   @override
@@ -46,7 +47,7 @@ class HabitRepositoryImpl implements HabitRepository {
   @override
   Future<void> addHabit(Habit habit) async {
     _habits = [..._habits, habit];
-    await _localDataSource.saveHabits(_userEmail, _habits);
+    await _saveToStorage();
   }
 
   @override
@@ -55,12 +56,17 @@ class HabitRepositoryImpl implements HabitRepository {
       for (final h in _habits)
         if (h.id == habit.id) habit else h,
     ];
-    await _localDataSource.saveHabits(_userEmail, _habits);
+    await _saveToStorage();
   }
 
   @override
   Future<void> deleteHabit(String id) async {
     _habits = _habits.where((h) => h.id != id).toList();
-    await _localDataSource.saveHabits(_userEmail, _habits);
+    await _saveToStorage();
+  }
+
+  Future<void> _saveToStorage() async {
+    final models = _habits.map((h) => HabitModel.fromEntity(h)).toList();
+    await _localDataSource.saveHabits(_userEmail, models);
   }
 }

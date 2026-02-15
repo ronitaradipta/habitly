@@ -9,6 +9,7 @@ import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.
 import 'package:habitly/presentation/widgets/habit/week_day_selector.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
+import 'package:habitly/presentation/providers/filtered_habits_provider.dart';
 import 'package:habitly/presentation/providers/selected_date_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
@@ -22,25 +23,8 @@ class HomePage extends ConsumerWidget {
     final colors = AppColors.of(context);
     final now = DateTime.now();
     final dateFormat = DateFormat('MMMM d');
-    final email = ref.watch(currentUserEmailProvider);
-    final habitAsync = email != null
-        ? ref.watch(habitProvider(email))
-        : const AsyncValue.data(<Habit>[]); // Fallback for no user
+    final filteredHabitsAsync = ref.watch(filteredHabitsProvider);
     final selectedDate = ref.watch(selectedDateProvider);
-
-    // Filter habits for selected date
-    final todaysHabits = habitAsync.when(
-      data: (habits) {
-        return habits.where((habit) {
-          if (habit.targetDate == null) return false;
-          return habit.targetDate!.year == selectedDate.year &&
-              habit.targetDate!.month == selectedDate.month &&
-              habit.targetDate!.day == selectedDate.day;
-        }).toList();
-      },
-      loading: () => null,
-      error: (error, stack) => <Habit>[],
-    );
 
     Future<void> onBottomNavTap(BottomNavItem item) async {
       switch (item) {
@@ -196,7 +180,7 @@ class HomePage extends ConsumerWidget {
 
             // Habit List
             Expanded(
-              child: habitAsync.when(
+              child: filteredHabitsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => Center(
                   child: Text(
@@ -204,8 +188,7 @@ class HomePage extends ConsumerWidget {
                     style: AppTextStyles.caption(context, FontEngine.google),
                   ),
                 ),
-                data: (_) {
-                  final habits = todaysHabits ?? [];
+                data: (habits) {
                   if (habits.isEmpty) {
                     return Center(
                       child: Column(

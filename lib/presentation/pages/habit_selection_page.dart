@@ -5,6 +5,7 @@ import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_progress_bar.dart';
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_button_row.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
+import 'package:habitly/presentation/providers/habit_selection_provider.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
@@ -169,7 +170,7 @@ class HabitSelectionPage extends ConsumerWidget {
                 // Bottom buttons
                 OnboardingButtonRow(
                   onSkip: () => _skip(context),
-                  onProceed: selectionState.canProceed
+                  onProceed: selectionState.hasSelection
                       ? () => _proceed(context, ref)
                       : null,
                 ),

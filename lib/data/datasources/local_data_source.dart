@@ -1,13 +1,15 @@
-import 'package:habitly/domain/entities/habit.dart';
-import 'package:habitly/domain/entities/user.dart';
+import 'package:habitly/data/models/habit_model.dart';
+import 'package:habitly/data/models/user_model.dart';
 
 abstract class LocalDataSource {
-  Future<User?> getCurrentUser();
-  Future<void> saveCurrentUser(User user);
+  Future<UserModel?> getCurrentUser();
+  Future<void> saveCurrentUser(UserModel user);
   Future<void> removeCurrentUser();
-  Future<User?> getRegisteredUser(String email);
-  Future<void> saveRegisteredUser(User user);
+  Future<UserModel?> getRegisteredUser(String email);
+  Future<void> saveRegisteredUser(UserModel user);
   Future<bool> isEmailRegistered(String email);
-  Future<List<Habit>> getHabits(String userEmail);
-  Future<void> saveHabits(String userEmail, List<Habit> habits);
+  Future<List<HabitModel>> getHabits(String userEmail);
+  Future<void> saveHabits(String userEmail, List<HabitModel> habits);
+  Future<String> getTheme();
+  Future<void> saveTheme(String themeModeName);
 }

@@ -43,7 +43,7 @@ class Habit {
   final String id;
   final String name;
   final int iconCodePoint;
-  bool isCompleted;
+  final bool isCompleted;
   final String? completionTime;
   final ReminderPeriod? reminderPeriod;
   final DateTime? targetDate;
@@ -57,30 +57,6 @@ class Habit {
     this.reminderPeriod,
     this.targetDate,
   });
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'iconCodePoint': iconCodePoint,
-    'isCompleted': isCompleted,
-    'completionTime': completionTime,
-    'reminderPeriod': reminderPeriod?.name,
-    'targetDate': targetDate?.toIso8601String(),
-  };
-
-  factory Habit.fromJson(Map<String, dynamic> json) => Habit(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    iconCodePoint: json['iconCodePoint'] as int? ?? 0xe8d8,
-    isCompleted: json['isCompleted'] as bool? ?? false,
-    completionTime: json['completionTime'] as String?,
-    reminderPeriod: ReminderPeriodExtension.fromId(
-      json['reminderPeriod'] as String?,
-    ),
-    targetDate: json['targetDate'] != null
-        ? DateTime.parse(json['targetDate'] as String)
-        : null,
-  );
 
   Habit copyWith({
     String? id,

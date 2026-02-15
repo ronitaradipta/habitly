@@ -1,41 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:habitly/infrastructure/hive_constants.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-
-class ThemeState {
-  final ThemeMode mode;
-
-  const ThemeState({this.mode = ThemeMode.system});
-
-  bool get isDarkMode => mode == ThemeMode.dark;
-  bool get isLightMode => mode == ThemeMode.light;
-  bool get isSystemMode => mode == ThemeMode.system;
-
-  ThemeState copyWith({ThemeMode? mode}) {
-    return ThemeState(mode: mode ?? this.mode);
-  }
-}
+import 'package:habitly/domain/usecases/get_theme_use_case.dart';
+import 'package:habitly/domain/usecases/save_theme_use_case.dart';
+import 'package:habitly/injection_container.dart' as di;
 
 class ThemeNotifier extends Notifier<ThemeMode> {
+  late final _getThemeUseCase = di.getIt<GetThemeUseCase>();
+  late final _saveThemeUseCase = di.getIt<SaveThemeUseCase>();
+
   @override
   ThemeMode build() {
+    _loadTheme();
+    return ThemeMode.system;
+  }
+
+  Future<void> _loadTheme() async {
     try {
-      final box = Hive.box(HiveConstants.themeBox);
-      final savedTheme = box.get(
-        HiveConstants.themeKey,
-        defaultValue: 'system',
-      );
+      final savedTheme = await _getThemeUseCase();
 
       final loadedMode = ThemeMode.values.firstWhere(
         (mode) => mode.name == savedTheme,
         orElse: () => ThemeMode.system,
       );
 
-      return loadedMode;
+      state = loadedMode;
     } catch (e) {
-      // If loading fails, use system default
-      return ThemeMode.system;
+      state = ThemeMode.system;
     }
   }
 
@@ -48,15 +38,11 @@ class ThemeNotifier extends Notifier<ThemeMode> {
     state = mode;
 
     try {
-      final box = Hive.box(HiveConstants.themeBox);
-      await box.put(HiveConstants.themeKey, mode.name);
+      await _saveThemeUseCase(mode.name);
     } catch (e) {
-      // Log error but don't crash - state update already happened
-      debugPrint('Error saving theme to Hive: $e');
+      debugPrint('Error saving theme: $e');
     }
   }
-
-  bool get isDarkMode => state == ThemeMode.dark;
 }
 
 final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(

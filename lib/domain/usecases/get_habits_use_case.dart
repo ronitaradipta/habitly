@@ -9,12 +9,4 @@ class GetHabitsUseCase {
   Future<List<Habit>> call() async {
     return _habitRepository.getHabits();
   }
-
-  Future<List<Habit>> byDate(DateTime date) async {
-    return _habitRepository.getHabitsByDate(date);
-  }
-
-  Future<Habit?> byId(String id) async {
-    return _habitRepository.getHabitById(id);
-  }
 }

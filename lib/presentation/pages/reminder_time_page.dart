@@ -125,7 +125,7 @@ class ReminderTimePage extends ConsumerWidget {
                 // Bottom buttons
                 OnboardingButtonRow(
                   onSkip: () => _skip(context, ref),
-                  onProceed: reminderState.canProceed
+                  onProceed: reminderState.hasSelection
                       ? () => _proceed(context, ref, reminderState.selectedTime)
                       : null,
                 ),

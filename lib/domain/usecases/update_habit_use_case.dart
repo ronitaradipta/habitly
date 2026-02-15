@@ -9,9 +9,4 @@ class UpdateHabitUseCase {
   Future<void> call(Habit habit) async {
     await _habitRepository.updateHabit(habit);
   }
-
-  Future<void> toggleCompletion(Habit habit) async {
-    final updatedHabit = habit.copyWith(isCompleted: !habit.isCompleted);
-    await _habitRepository.updateHabit(updatedHabit);
-  }
 }
