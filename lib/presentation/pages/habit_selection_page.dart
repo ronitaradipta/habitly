@@ -6,83 +6,28 @@ import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_progre
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_button_row.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/presentation/providers/habit_selection_provider.dart';
-import 'package:habitly/presentation/providers/auth_provider.dart';
+import 'package:habitly/core/constants/preset_habits.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
-import 'package:habitly/domain/entities/habit.dart';
 import 'package:sizer/sizer.dart';
-
-final List<Map<String, dynamic>> _availableHabits = [
-  {
-    'id': 'take_picture',
-    'name': 'Take Picture',
-    'iconCodePoint': Icons.camera_alt_outlined.codePoint,
-  },
-  {
-    'id': 'workout',
-    'name': 'Workout',
-    'iconCodePoint': Icons.fitness_center.codePoint,
-  },
-  {
-    'id': 'journaling',
-    'name': 'Journaling',
-    'iconCodePoint': Icons.edit_outlined.codePoint,
-  },
-  {
-    'id': 'planning',
-    'name': 'Planning',
-    'iconCodePoint': Icons.calendar_month_outlined.codePoint,
-  },
-  {
-    'id': 'game_tracking',
-    'name': 'Game Tracking',
-    'iconCodePoint': Icons.sports_esports_outlined.codePoint,
-  },
-  {
-    'id': 'reading',
-    'name': 'Reading',
-    'iconCodePoint': Icons.menu_book_outlined.codePoint,
-  },
-  {
-    'id': 'music_time',
-    'name': 'Music time',
-    'iconCodePoint': Icons.music_note_outlined.codePoint,
-  },
-  {
-    'id': 'sleep_early',
-    'name': 'Sleep Early',
-    'iconCodePoint': Icons.bed_outlined.codePoint,
-  },
-];
 
 class HabitSelectionPage extends ConsumerWidget {
   const HabitSelectionPage({super.key});
 
   Future<void> _proceed(BuildContext context, WidgetRef ref) async {
     final selectionState = ref.read(habitSelectionProvider);
-
-    // Load existing habits and clear them to start fresh with current selection
-    final email = ref.read(currentUserEmailProvider);
-    final existingHabits = email != null
-        ? (ref.read(habitProvider(email)).value ?? [])
-        : <Habit>[];
     final notifier = ref.read(currentUserHabitsNotifierProvider);
     if (notifier == null) return;
 
-    for (var habit in existingHabits) {
-      await notifier.deleteHabit(habit.id);
-    }
+    final selectedHabitData = selectionState.selectedHabits.map((habitId) {
+      final preset = presetHabits.firstWhere((p) => p.id == habitId);
+      return {
+        'name': preset.name,
+        'iconCodePoint': preset.iconCodePoint,
+      };
+    }).toList();
 
-    for (var habitId in selectionState.selectedHabits) {
-      final habitData = _availableHabits.firstWhere(
-        (element) => element['id'] == habitId,
-      );
-      await notifier.addHabit(
-        name: habitData['name'],
-        date: DateTime.now(),
-        period: ReminderPeriod.morning,
-      );
-    }
+    await notifier.setupOnboardingHabits(selectedHabitData);
 
     if (context.mounted) {
       Navigator.pushReplacementNamed(context, '/reminder-time');
@@ -117,7 +62,7 @@ class HabitSelectionPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "What habbit you want to do?",
+                        "What habit do you want to do?",
                         style: AppTextStyles.heading(
                           context,
                           FontEngine.google,
@@ -147,20 +92,17 @@ class HabitSelectionPage extends ConsumerWidget {
                         mainAxisSpacing: 16,
                         childAspectRatio: 1.1,
                       ),
-                      itemCount: _availableHabits.length,
+                      itemCount: presetHabits.length,
                       itemBuilder: (context, index) {
-                        final habit = _availableHabits[index];
-                        final isSelected = selectionState.isSelected(
-                          habit['id'],
-                        );
+                        final habit = presetHabits[index];
+                        final isSelected = selectionState.isSelected(habit.id);
                         return HabitCard(
-                          id: habit['id'],
-                          name: habit['name'],
-                          iconCodePoint: habit['iconCodePoint'],
+                          id: habit.id,
+                          name: habit.name,
+                          iconCodePoint: habit.iconCodePoint,
                           isSelected: isSelected,
                           colors: colors,
-                          onTap: () =>
-                              selectionNotifier.toggleHabit(habit['id']),
+                          onTap: () => selectionNotifier.toggleHabit(habit.id),
                         );
                       },
                     ),

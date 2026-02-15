@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:habitly/domain/usecases/get_theme_use_case.dart';
-import 'package:habitly/domain/usecases/save_theme_use_case.dart';
-import 'package:habitly/injection_container.dart' as di;
+import 'package:habitly/presentation/providers/use_case_providers.dart';
 
 class ThemeNotifier extends Notifier<ThemeMode> {
-  late final _getThemeUseCase = di.getIt<GetThemeUseCase>();
-  late final _saveThemeUseCase = di.getIt<SaveThemeUseCase>();
-
   @override
   ThemeMode build() {
     _loadTheme();
@@ -16,7 +11,7 @@ class ThemeNotifier extends Notifier<ThemeMode> {
 
   Future<void> _loadTheme() async {
     try {
-      final savedTheme = await _getThemeUseCase();
+      final savedTheme = await ref.read(getThemeUseCaseProvider)();
 
       final loadedMode = ThemeMode.values.firstWhere(
         (mode) => mode.name == savedTheme,
@@ -38,7 +33,7 @@ class ThemeNotifier extends Notifier<ThemeMode> {
     state = mode;
 
     try {
-      await _saveThemeUseCase(mode.name);
+      await ref.read(saveThemeUseCaseProvider)(mode.name);
     } catch (e) {
       debugPrint('Error saving theme: $e');
     }

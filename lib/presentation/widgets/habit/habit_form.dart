@@ -126,6 +126,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
       }
       await notifier.addHabit(
         name: _nameController.text,
+        iconCodePoint: Icons.fitness_center.codePoint,
         date: formState.selectedDate!,
         period: formState.selectedPeriod!,
       );
@@ -173,8 +174,8 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     final dateFormat = DateFormat('MM/dd/yyyy');
     final formState = ref.watch(habitFormProvider);
     final title = widget.mode == FormMode.create
-        ? 'Add New Habbit'
-        : 'Edit Habbit';
+        ? 'Add New Habit'
+        : 'Edit Habit';
     final buttonText = widget.mode == FormMode.create
         ? 'Save Habit'
         : 'Update Habit';
@@ -243,7 +244,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                     // Habit Name Field
                     AppTextField(
                       controller: _nameController,
-                      hintText: 'Habbit Name',
+                      hintText: 'Habit Name',
                       borderStyle: AppTextFieldBorderStyle.underline,
                       style: AppTextStyles.body(context, FontEngine.google),
                     ),

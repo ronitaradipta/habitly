@@ -1,30 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/domain/entities/user.dart';
-import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
-import 'package:habitly/domain/usecases/get_current_user_use_case.dart';
-import 'package:habitly/domain/usecases/login_use_case.dart';
-import 'package:habitly/domain/usecases/logout_use_case.dart';
-import 'package:habitly/domain/usecases/mark_onboarding_complete_use_case.dart';
-import 'package:habitly/domain/usecases/register_use_case.dart';
-import 'package:habitly/injection_container.dart' as di;
+import 'package:habitly/presentation/providers/use_case_providers.dart';
 
 class AuthNotifier extends AsyncNotifier<User?> {
-  late final _getCurrentUserUseCase = di.getIt<GetCurrentUserUseCase>();
-  late final _loginUseCase = di.getIt<LoginUseCase>();
-  late final _registerUseCase = di.getIt<RegisterUseCase>();
-  late final _logoutUseCase = di.getIt<LogoutUseCase>();
-  late final _markOnboardingCompleteUseCase = di
-      .getIt<MarkOnboardingCompleteUseCase>();
-  late final _checkEmailRegisteredUseCase = di
-      .getIt<CheckEmailRegisteredUseCase>();
-
   @override
   Future<User?> build() async {
-    return _getCurrentUserUseCase();
+    return ref.read(getCurrentUserUseCaseProvider)();
   }
 
   Future<bool> isEmailRegistered(String email) async {
-    return _checkEmailRegisteredUseCase(email);
+    return ref.read(checkEmailRegisteredUseCaseProvider)(email);
   }
 
   Future<void> register({
@@ -35,7 +20,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return _registerUseCase(
+      return ref.read(registerUseCaseProvider)(
         email: email,
         fullName: fullName,
         mobile: mobile,
@@ -47,7 +32,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
   Future<void> login(String email) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return _loginUseCase(email);
+      return ref.read(loginUseCaseProvider)(email);
     });
   }
 
@@ -57,14 +42,14 @@ class AuthNotifier extends AsyncNotifier<User?> {
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return _markOnboardingCompleteUseCase(currentUser);
+      return ref.read(markOnboardingCompleteUseCaseProvider)(currentUser);
     });
   }
 
   Future<void> logout() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await _logoutUseCase();
+      await ref.read(logoutUseCaseProvider)();
       return null;
     });
   }

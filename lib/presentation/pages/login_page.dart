@@ -21,21 +21,7 @@ class LoginPage extends ConsumerWidget {
   ) async {
     final authNotifier = ref.read(authProvider.notifier);
 
-    // Check if email is registered
-    final isRegistered = await authNotifier.isEmailRegistered(email);
-    if (!isRegistered) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Account doesn't exist. Please register first."),
-            backgroundColor: AppColors.of(context).error,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Login and get user data
+    // LoginUseCase throws if user not found, handled by authState.when(error:)
     await authNotifier.login(email);
 
     // Check auth state for navigation

@@ -1,3 +1,4 @@
+import 'package:habitly/core/utils/date_utils.dart';
 import 'package:habitly/data/datasources/local_data_source.dart';
 import 'package:habitly/data/models/habit_model.dart';
 import 'package:habitly/domain/entities/habit.dart';
@@ -29,9 +30,7 @@ class HabitRepositoryImpl implements HabitRepository {
     final allHabits = await getHabits();
     return allHabits.where((habit) {
       if (habit.targetDate == null) return false;
-      return habit.targetDate!.year == date.year &&
-          habit.targetDate!.month == date.month &&
-          habit.targetDate!.day == date.day;
+      return AppDateUtils.isSameDay(habit.targetDate!, date);
     }).toList();
   }
 

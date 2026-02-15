@@ -9,8 +9,6 @@ class HiveService {
 
   final Map<String, Box> _boxes = {};
 
-  static Future<void> init() async {}
-
   Future<Box> getBox(String boxName) async {
     if (_boxes.containsKey(boxName)) {
       return _boxes[boxName]!;

@@ -6,7 +6,6 @@ class HiveConstants {
   static const String authBox = 'authBox';
   static const String registeredUsersBox = 'registeredUsersBox';
 
-  static const String habitListKey = 'habits';
   static const String themeKey = 'themeMode';
   static const String userKey = 'user';
 

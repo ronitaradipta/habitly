@@ -11,6 +11,7 @@ import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
 import 'package:habitly/domain/usecases/get_current_user_use_case.dart';
+import 'package:habitly/domain/usecases/get_habits_by_date_use_case.dart';
 import 'package:habitly/domain/usecases/get_habits_use_case.dart';
 import 'package:habitly/domain/usecases/get_theme_use_case.dart';
 import 'package:habitly/domain/usecases/login_use_case.dart';
@@ -18,7 +19,10 @@ import 'package:habitly/domain/usecases/logout_use_case.dart';
 import 'package:habitly/domain/usecases/mark_onboarding_complete_use_case.dart';
 import 'package:habitly/domain/usecases/register_use_case.dart';
 import 'package:habitly/domain/usecases/save_theme_use_case.dart';
+import 'package:habitly/domain/usecases/setup_onboarding_habits_use_case.dart';
+import 'package:habitly/domain/usecases/toggle_habit_completion_use_case.dart';
 import 'package:habitly/domain/usecases/update_habit_use_case.dart';
+import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
 
 final getIt = GetIt.instance;
 
@@ -73,8 +77,25 @@ void init() {
     (userEmail, _) =>
         GetHabitsUseCase(getIt<HabitRepository>(param1: userEmail)),
   );
+  getIt.registerFactoryParam<GetHabitsByDateUseCase, String, void>(
+    (userEmail, _) =>
+        GetHabitsByDateUseCase(getIt<HabitRepository>(param1: userEmail)),
+  );
   getIt.registerFactoryParam<UpdateHabitUseCase, String, void>(
     (userEmail, _) =>
         UpdateHabitUseCase(getIt<HabitRepository>(param1: userEmail)),
+  );
+  getIt.registerFactoryParam<SetupOnboardingHabitsUseCase, String, void>(
+    (userEmail, _) =>
+        SetupOnboardingHabitsUseCase(getIt<HabitRepository>(param1: userEmail)),
+  );
+  getIt.registerFactoryParam<UpdateHabitsReminderUseCase, String, void>(
+    (userEmail, _) =>
+        UpdateHabitsReminderUseCase(getIt<HabitRepository>(param1: userEmail)),
+  );
+  getIt.registerFactoryParam<ToggleHabitCompletionUseCase, String, void>(
+    (userEmail, _) => ToggleHabitCompletionUseCase(
+      getIt<HabitRepository>(param1: userEmail),
+    ),
   );
 }

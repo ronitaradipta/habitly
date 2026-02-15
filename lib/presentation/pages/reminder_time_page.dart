@@ -24,30 +24,13 @@ class ReminderTimePage extends ConsumerWidget {
     String? selectedTime,
   ) async {
     if (selectedTime != null) {
-      final email = ref.read(currentUserEmailProvider);
-      final habits = email != null
-          ? (ref.read(habitProvider(email)).value ?? [])
-          : <Habit>[];
       final period = ReminderPeriodExtension.fromId(selectedTime);
-
       if (period == null) return;
 
       final notifier = ref.read(currentUserHabitsNotifierProvider);
       if (notifier == null) return;
 
-      // Update all habits with selected time and ensure today's date is set
-      for (var habit in habits) {
-        final newHabit = Habit(
-          id: habit.id,
-          name: habit.name,
-          iconCodePoint: habit.iconCodePoint,
-          isCompleted: habit.isCompleted,
-          completionTime: period.time, // Use centralized time from extension
-          reminderPeriod: period,
-          targetDate: habit.targetDate ?? DateTime.now(), // Ensure date is set
-        );
-        await notifier.updateHabit(newHabit);
-      }
+      await notifier.updateHabitsReminder(period);
     }
     // Mark onboarding as complete
     await ref.read(authProvider.notifier).markOnboardingComplete();

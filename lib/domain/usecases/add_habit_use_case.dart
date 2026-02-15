@@ -6,7 +6,21 @@ class AddHabitUseCase {
 
   AddHabitUseCase(this._habitRepository);
 
-  Future<void> call(Habit habit) async {
+  Future<void> call({
+    required String name,
+    required int iconCodePoint,
+    required DateTime targetDate,
+    required ReminderPeriod reminderPeriod,
+  }) async {
+    final habit = Habit(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      iconCodePoint: iconCodePoint,
+      isCompleted: false,
+      completionTime: reminderPeriod.time,
+      reminderPeriod: reminderPeriod,
+      targetDate: targetDate,
+    );
     await _habitRepository.addHabit(habit);
   }
 }

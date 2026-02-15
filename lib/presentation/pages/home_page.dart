@@ -168,7 +168,7 @@ class HomePage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'My Habbit',
+                'My Habit',
                 style: AppTextStyles.heading(
                   context,
                   FontEngine.google,

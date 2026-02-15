@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/utils/date_utils.dart';
 
 class WeekDaySelector extends StatelessWidget {
   final DateTime selectedDate;
@@ -31,14 +32,8 @@ class WeekDaySelector extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: List.generate(7, (index) {
         final day = weekDays[index];
-        final isToday =
-            day.day == now.day &&
-            day.month == now.month &&
-            day.year == now.year;
-        final isSelected =
-            day.day == selectedDate.day &&
-            day.month == selectedDate.month &&
-            day.year == selectedDate.year;
+        final isToday = AppDateUtils.isSameDay(day, now);
+        final isSelected = AppDateUtils.isSameDay(day, selectedDate);
 
         return GestureDetector(
           onTap: () => onDateSelected?.call(day),

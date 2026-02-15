@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/utils/date_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
@@ -14,9 +15,7 @@ final filteredHabitsProvider = Provider<AsyncValue<List<Habit>>>((ref) {
   return habitAsync.whenData((habits) {
     return habits.where((habit) {
       if (habit.targetDate == null) return false;
-      return habit.targetDate!.year == selectedDate.year &&
-          habit.targetDate!.month == selectedDate.month &&
-          habit.targetDate!.day == selectedDate.day;
+      return AppDateUtils.isSameDay(habit.targetDate!, selectedDate);
     }).toList();
   });
 });

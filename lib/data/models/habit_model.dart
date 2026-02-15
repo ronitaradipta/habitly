@@ -4,7 +4,7 @@ class HabitModel {
   final String id;
   final String name;
   final int iconCodePoint;
-  bool isCompleted;
+  final bool isCompleted;
   final String? completionTime;
   final String? reminderPeriodName;
   final DateTime? targetDate;
