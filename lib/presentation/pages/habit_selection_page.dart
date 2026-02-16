@@ -9,6 +9,7 @@ import 'package:habitly/presentation/providers/habit_selection_provider.dart';
 import 'package:habitly/core/constants/preset_habits.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class HabitSelectionPage extends ConsumerWidget {
@@ -16,8 +17,7 @@ class HabitSelectionPage extends ConsumerWidget {
 
   Future<void> _proceed(BuildContext context, WidgetRef ref) async {
     final selectionState = ref.read(habitSelectionProvider);
-    final notifier = ref.read(currentUserHabitsNotifierProvider);
-    if (notifier == null) return;
+    final notifier = ref.read(habitProvider.notifier);
 
     final selectedHabitData = selectionState.selectedHabits.map((habitId) {
       final preset = presetHabits.firstWhere((p) => p.id == habitId);
@@ -30,12 +30,12 @@ class HabitSelectionPage extends ConsumerWidget {
     await notifier.setupOnboardingHabits(selectedHabitData);
 
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/reminder-time');
+      Navigator.pushReplacementNamed(context, AppRoutes.reminderTime);
     }
   }
 
   void _skip(BuildContext context) {
-    Navigator.pushReplacementNamed(context, '/reminder-time');
+    Navigator.pushReplacementNamed(context, AppRoutes.reminderTime);
   }
 
   @override
@@ -65,7 +65,6 @@ class HabitSelectionPage extends ConsumerWidget {
                         "What habit do you want to do?",
                         style: AppTextStyles.heading(
                           context,
-                          FontEngine.google,
                         ).copyWith(fontSize: 18.sp),
                       ),
                       const SizedBox(height: 4),
@@ -73,7 +72,6 @@ class HabitSelectionPage extends ConsumerWidget {
                         "Select One or More",
                         style: AppTextStyles.caption(
                           context,
-                          FontEngine.google,
                         ),
                       ),
                     ],
@@ -101,7 +99,6 @@ class HabitSelectionPage extends ConsumerWidget {
                           name: habit.name,
                           iconCodePoint: habit.iconCodePoint,
                           isSelected: isSelected,
-                          colors: colors,
                           onTap: () => selectionNotifier.toggleHabit(habit.id),
                         );
                       },

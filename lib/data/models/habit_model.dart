@@ -1,4 +1,5 @@
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HabitModel {
   final String id;
@@ -39,25 +40,30 @@ class HabitModel {
     targetDate: habit.targetDate,
   );
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'iconCodePoint': iconCodePoint,
-    'isCompleted': isCompleted,
-    'completionTime': completionTime,
-    'reminderPeriodName': reminderPeriodName,
-    'targetDate': targetDate?.toIso8601String(),
-  };
+  factory HabitModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+    return HabitModel(
+      id: snapshot.id,
+      name: data?['name'] as String? ?? '',
+      iconCodePoint: data?['iconCodePoint'] as int? ?? 0xe8d8,
+      isCompleted: data?['isCompleted'] as bool? ?? false,
+      completionTime: data?['completionTime'] as String?,
+      reminderPeriodName: data?['reminderPeriodName'] as String?,
+      targetDate: (data?['targetDate'] as Timestamp?)?.toDate(),
+    );
+  }
 
-  factory HabitModel.fromJson(Map<String, dynamic> json) => HabitModel(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    iconCodePoint: json['iconCodePoint'] as int? ?? 0xe8d8,
-    isCompleted: json['isCompleted'] as bool? ?? false,
-    completionTime: json['completionTime'] as String?,
-    reminderPeriodName: json['reminderPeriodName'] as String?,
-    targetDate: json['targetDate'] != null
-        ? DateTime.parse(json['targetDate'] as String)
-        : null,
-  );
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'iconCodePoint': iconCodePoint,
+      'isCompleted': isCompleted,
+      'completionTime': completionTime,
+      'reminderPeriodName': reminderPeriodName,
+      'targetDate': targetDate != null ? Timestamp.fromDate(targetDate!) : null,
+    };
+  }
 }

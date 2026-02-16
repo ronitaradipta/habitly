@@ -3,6 +3,7 @@ import 'package:habitly/presentation/widgets/shared/branding/habitly_logo.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class LaunchPage extends StatelessWidget {
@@ -45,7 +46,6 @@ class LaunchPage extends StatelessWidget {
                           style:
                               AppTextStyles.heading(
                                 context,
-                                FontEngine.google,
                               ).copyWith(
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.w500,
@@ -55,7 +55,7 @@ class LaunchPage extends StatelessWidget {
                         // Circular Next button with arrow
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushReplacementNamed(context, '/login');
+                            Navigator.pushReplacementNamed(context, AppRoutes.login);
                           },
                           child: Container(
                             width: 60,

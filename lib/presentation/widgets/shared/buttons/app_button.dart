@@ -12,6 +12,7 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.isExpanded = true,
     this.fontSize,
+    this.isLoading = false,
   });
 
   final String text;
@@ -20,18 +21,41 @@ class AppButton extends StatelessWidget {
   final AppButtonVariant variant;
   final bool isExpanded;
   final double? fontSize;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final effectiveFontSize = fontSize ?? 16.0;
+    final effectiveOnPressed = isLoading ? null : onPressed;
+
+    Widget buildChild({Color? textColor}) {
+      if (isLoading) {
+        return SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              textColor ?? Colors.white,
+            ),
+          ),
+        );
+      }
+      return Text(
+        text,
+        style: AppTextStyles.button(
+          context,
+        ).copyWith(fontSize: effectiveFontSize, color: textColor),
+      );
+    }
 
     Widget button;
 
     switch (variant) {
       case AppButtonVariant.primary:
         button = ElevatedButton(
-          onPressed: onPressed,
+          onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.primary,
             foregroundColor: Colors.white,
@@ -41,19 +65,13 @@ class AppButton extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: Text(
-            text,
-            style: AppTextStyles.button(
-              context,
-              FontEngine.google,
-            ).copyWith(fontSize: effectiveFontSize),
-          ),
+          child: buildChild(),
         );
         break;
 
       case AppButtonVariant.secondary:
         button = ElevatedButton(
-          onPressed: onPressed,
+          onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.border,
             foregroundColor: colors.primary,
@@ -63,19 +81,13 @@ class AppButton extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: Text(
-            text,
-            style: AppTextStyles.button(
-              context,
-              FontEngine.google,
-            ).copyWith(fontSize: effectiveFontSize, color: colors.primary),
-          ),
+          child: buildChild(textColor: colors.primary),
         );
         break;
 
       case AppButtonVariant.outline:
         button = OutlinedButton(
-          onPressed: onPressed,
+          onPressed: effectiveOnPressed,
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
             side: BorderSide(color: colors.primary),
@@ -83,19 +95,13 @@ class AppButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(30),
             ),
           ),
-          child: Text(
-            text,
-            style: AppTextStyles.button(
-              context,
-              FontEngine.google,
-            ).copyWith(fontSize: effectiveFontSize, color: colors.primary),
-          ),
+          child: buildChild(textColor: colors.primary),
         );
         break;
 
       case AppButtonVariant.dark:
         button = ElevatedButton(
-          onPressed: onPressed,
+          onPressed: effectiveOnPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.textPrimary,
             foregroundColor: Colors.white,
@@ -105,13 +111,7 @@ class AppButton extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: Text(
-            text,
-            style: AppTextStyles.button(
-              context,
-              FontEngine.google,
-            ).copyWith(fontSize: effectiveFontSize),
-          ),
+          child: buildChild(),
         );
         break;
     }
@@ -169,7 +169,7 @@ class AppSocialButton extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: AppTextStyles.buttonSocial(context, FontEngine.google),
+              style: AppTextStyles.buttonSocial(context),
             ),
           ],
         ),

@@ -9,6 +9,7 @@ import 'package:habitly/presentation/widgets/shared/branding/habitly_logo.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class LoginPage extends ConsumerWidget {
@@ -18,11 +19,11 @@ class LoginPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     String email,
+    String password,
   ) async {
     final authNotifier = ref.read(authProvider.notifier);
 
-    // LoginUseCase throws if user not found, handled by authState.when(error:)
-    await authNotifier.login(email);
+    await authNotifier.login(email, password);
 
     // Check auth state for navigation
     final authState = ref.read(authProvider);
@@ -31,16 +32,16 @@ class LoginPage extends ConsumerWidget {
         data: (user) {
           if (user != null) {
             if (user.hasCompletedOnboarding) {
-              Navigator.pushReplacementNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, AppRoutes.home);
             } else {
-              Navigator.pushReplacementNamed(context, '/habit-selection');
+              Navigator.pushReplacementNamed(context, AppRoutes.habitSelection);
             }
           }
         },
         error: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(error.toString()),
+              content: Text(error.toString().replaceAll('Exception: ', '')),
               backgroundColor: AppColors.of(context).error,
             ),
           );
@@ -55,6 +56,7 @@ class LoginPage extends ConsumerWidget {
     final colors = AppColors.of(context);
     final formState = ref.watch(loginFormProvider);
     final formNotifier = ref.read(loginFormProvider.notifier);
+    final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -72,7 +74,7 @@ class LoginPage extends ConsumerWidget {
                   // "Didn't have account?" section
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, '/register');
+                      Navigator.pushNamed(context, AppRoutes.register);
                     },
                     child: Column(
                       children: [
@@ -80,13 +82,12 @@ class LoginPage extends ConsumerWidget {
                           "Didn't have account ?",
                           style: AppTextStyles.heading(
                             context,
-                            FontEngine.google,
                           ).copyWith(fontSize: 20.sp),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Create one here!",
-                          style: AppTextStyles.link(context, FontEngine.google),
+                          style: AppTextStyles.link(context),
                         ),
                       ],
                     ),
@@ -105,13 +106,31 @@ class LoginPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Continue button - disabled when email is invalid
+                  // Password input field
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: AppPasswordField(
+                      fieldKey: "login_password",
+                      hintText: "Password",
+                      onChanged: formNotifier.updatePassword,
+                      validator: (_) => formState.passwordError,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Continue button - disabled when form is invalid
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24),
                     child: AppButton(
                       text: "Continue",
+                      isLoading: isLoading,
                       onPressed: formState.isValid
-                          ? () => _continue(context, ref, formState.email)
+                          ? () => _continue(
+                              context,
+                              ref,
+                              formState.email,
+                              formState.password,
+                            )
                           : null,
                       variant: AppButtonVariant.primary,
                     ),
@@ -121,7 +140,7 @@ class LoginPage extends ConsumerWidget {
                   // "or" divider
                   Text(
                     "or",
-                    style: AppTextStyles.caption(context, FontEngine.google),
+                    style: AppTextStyles.caption(context),
                   ),
                   const SizedBox(height: 24),
 
@@ -157,14 +176,12 @@ class LoginPage extends ConsumerWidget {
                         text: "By clicking continue, you agree to our ",
                         style: AppTextStyles.caption(
                           context,
-                          FontEngine.google,
                         ),
                         children: [
                           TextSpan(
                             text: "Terms of Service",
                             style: AppTextStyles.link(
                               context,
-                              FontEngine.google,
                             ),
                           ),
                           TextSpan(text: "\nand "),
@@ -172,7 +189,6 @@ class LoginPage extends ConsumerWidget {
                             text: "Privacy Policy",
                             style: AppTextStyles.link(
                               context,
-                              FontEngine.google,
                             ),
                           ),
                         ],

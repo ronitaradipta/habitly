@@ -17,6 +17,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     required String fullName,
     required String mobile,
     required String gender,
+    required String password,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -25,14 +26,15 @@ class AuthNotifier extends AsyncNotifier<User?> {
         fullName: fullName,
         mobile: mobile,
         gender: gender,
+        password: password,
       );
     });
   }
 
-  Future<void> login(String email) async {
+  Future<void> login(String email, String password) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      return ref.read(loginUseCaseProvider)(email);
+      return ref.read(loginUseCaseProvider)(email: email, password: password);
     });
   }
 
@@ -58,8 +60,3 @@ class AuthNotifier extends AsyncNotifier<User?> {
 final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
   AuthNotifier.new,
 );
-
-final currentUserEmailProvider = Provider<String?>((ref) {
-  final authAsync = ref.watch(authProvider);
-  return authAsync.value?.email;
-});

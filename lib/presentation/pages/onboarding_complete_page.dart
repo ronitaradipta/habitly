@@ -3,6 +3,7 @@ import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class OnboardingCompletePage extends StatelessWidget {
@@ -44,7 +45,6 @@ class OnboardingCompletePage extends StatelessWidget {
                       "Congrats, you are all set!",
                       style: AppTextStyles.heading(
                         context,
-                        FontEngine.google,
                       ).copyWith(fontSize: 20.sp),
                       textAlign: TextAlign.center,
                     ),
@@ -53,7 +53,7 @@ class OnboardingCompletePage extends StatelessWidget {
                     // Subtitle
                     Text(
                       "Start tracking your habits and build a healthier lifestyle.",
-                      style: AppTextStyles.caption(context, FontEngine.google),
+                      style: AppTextStyles.caption(context),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 48),
@@ -62,7 +62,7 @@ class OnboardingCompletePage extends StatelessWidget {
                     AppButton(
                       text: "Start Tracking",
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
+                        Navigator.pushReplacementNamed(context, AppRoutes.home);
                       },
                       variant: AppButtonVariant.primary,
                     ),

@@ -67,7 +67,7 @@ class HomeHabitTile extends StatelessWidget {
                 children: [
                   Text(
                     habit.name,
-                    style: AppTextStyles.body(context, FontEngine.google)
+                    style: AppTextStyles.body(context)
                         .copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -82,7 +82,6 @@ class HomeHabitTile extends StatelessWidget {
                     completionText,
                     style: AppTextStyles.caption(
                       context,
-                      FontEngine.google,
                     ).copyWith(color: colors.textSecondary, fontSize: 12),
                   ),
                 ],

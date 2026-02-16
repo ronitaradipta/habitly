@@ -1,11 +1,11 @@
-import 'package:habitly/domain/repositories/user_repository.dart';
+import 'package:habitly/domain/repositories/auth_repository.dart';
 
 class LogoutUseCase {
-  final UserRepository _userRepository;
+  final AuthRepository _authRepository;
 
-  LogoutUseCase(this._userRepository);
+  LogoutUseCase(this._authRepository);
 
   Future<void> call() async {
-    await _userRepository.removeCurrentUser();
+    await _authRepository.signOut();
   }
 }

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/widgets/habit/habit_form.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
-import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 
 class EditHabitPage extends ConsumerWidget {
@@ -14,7 +12,6 @@ class EditHabitPage extends ConsumerWidget {
     final colors = AppColors.of(context);
     final habitId = ModalRoute.of(context)?.settings.arguments as String?;
 
-    // Handle missing habit ID
     if (habitId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (Navigator.canPop(context)) {
@@ -30,11 +27,7 @@ class EditHabitPage extends ConsumerWidget {
       );
     }
 
-    // Watch the async habits state directly to handle loading properly
-    final email = ref.watch(currentUserEmailProvider);
-    final habitsAsync = email != null
-        ? ref.watch(habitProvider(email))
-        : const AsyncValue.data(<Habit>[]);
+    final habitsAsync = ref.watch(habitProvider);
 
     return habitsAsync.when(
       loading: () => Scaffold(

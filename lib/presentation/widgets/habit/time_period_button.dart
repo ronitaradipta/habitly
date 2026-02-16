@@ -31,7 +31,7 @@ class TimePeriodButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: AppTextStyles.body(context, FontEngine.google).copyWith(
+          style: AppTextStyles.body(context).copyWith(
             fontWeight: FontWeight.w600,
             color: isSelected ? Colors.white : colors.primary,
           ),

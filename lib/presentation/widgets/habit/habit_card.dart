@@ -7,7 +7,6 @@ class HabitCard extends StatelessWidget {
   final String name;
   final int iconCodePoint;
   final bool isSelected;
-  final AppColors colors;
   final VoidCallback onTap;
 
   const HabitCard({
@@ -16,12 +15,12 @@ class HabitCard extends StatelessWidget {
     required this.name,
     required this.iconCodePoint,
     required this.isSelected,
-    required this.colors,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -50,7 +49,7 @@ class HabitCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               name,
-              style: AppTextStyles.body(context, FontEngine.google).copyWith(
+              style: AppTextStyles.body(context).copyWith(
                 fontWeight: FontWeight.w500,
                 color: isSelected ? colors.primary : colors.textPrimary,
               ),

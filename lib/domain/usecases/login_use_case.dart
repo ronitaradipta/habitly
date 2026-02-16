@@ -1,26 +1,27 @@
 import 'package:habitly/domain/entities/user.dart';
+import 'package:habitly/domain/repositories/auth_repository.dart';
 import 'package:habitly/domain/repositories/user_repository.dart';
 
 class LoginUseCase {
   final UserRepository _userRepository;
+  final AuthRepository _authRepository;
 
-  LoginUseCase(this._userRepository);
+  LoginUseCase(this._userRepository, this._authRepository);
 
-  Future<User> call(String email) async {
+  Future<User> call({required String email, required String password}) async {
     final normalizedEmail = email.toLowerCase();
 
-    final registeredUser = await _userRepository.getRegisteredUser(
-      normalizedEmail,
-    );
+    await _authRepository.signIn(email: normalizedEmail, password: password);
 
-    if (registeredUser == null) {
-      throw Exception('Account does not exist. Please register first.');
+    final user = await _userRepository.getCurrentUser();
+
+    if (user == null) {
+      throw Exception('User profile not found.');
     }
 
-    final updatedUser = registeredUser.copyWith(loggedInAt: DateTime.now());
+    final updatedUser = user.copyWith(loggedInAt: DateTime.now());
 
-    await _userRepository.saveCurrentUser(updatedUser);
-    await _userRepository.saveRegisteredUser(updatedUser);
+    await _userRepository.saveUser(updatedUser);
 
     return updatedUser;
   }

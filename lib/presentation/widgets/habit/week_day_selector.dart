@@ -43,7 +43,7 @@ class WeekDaySelector extends StatelessWidget {
               // Day label (M, T, W, etc.)
               Text(
                 dayLabels[index],
-                style: AppTextStyles.body(context, FontEngine.google).copyWith(
+                style: AppTextStyles.body(context).copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.textPrimary,
                 ),
@@ -70,7 +70,7 @@ class WeekDaySelector extends StatelessWidget {
                     child: Center(
                       child: Text(
                         day.day.toString(),
-                        style: AppTextStyles.body(context, FontEngine.google)
+                        style: AppTextStyles.body(context)
                             .copyWith(
                               fontWeight: FontWeight.w500,
                               fontSize: 12,

@@ -1,4 +1,5 @@
 import 'package:habitly/domain/entities/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
   final String email;
@@ -35,21 +36,30 @@ class UserModel {
     hasCompletedOnboarding: user.hasCompletedOnboarding,
   );
 
-  Map<String, dynamic> toJson() => {
-    'email': email,
-    'fullName': fullName,
-    'mobile': mobile,
-    'gender': gender,
-    'loggedInAt': loggedInAt.toIso8601String(),
-    'hasCompletedOnboarding': hasCompletedOnboarding,
-  };
+  factory UserModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+    return UserModel(
+      email: data?['email'] as String? ?? '',
+      fullName: data?['fullName'] as String? ?? '',
+      mobile: data?['mobile'] as String? ?? '',
+      gender: data?['gender'] as String? ?? '',
+      loggedInAt:
+          (data?['loggedInAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      hasCompletedOnboarding: data?['hasCompletedOnboarding'] as bool? ?? false,
+    );
+  }
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    email: json['email'] as String,
-    fullName: json['fullName'] as String? ?? '',
-    mobile: json['mobile'] as String? ?? '',
-    gender: json['gender'] as String? ?? '',
-    loggedInAt: DateTime.parse(json['loggedInAt'] as String),
-    hasCompletedOnboarding: json['hasCompletedOnboarding'] as bool? ?? false,
-  );
+  Map<String, dynamic> toFirestore() {
+    return {
+      if (email.isNotEmpty) 'email': email,
+      'loggedInAt': Timestamp.fromDate(loggedInAt),
+      if (fullName.isNotEmpty) 'fullName': fullName,
+      if (mobile.isNotEmpty) 'mobile': mobile,
+      if (gender.isNotEmpty) 'gender': gender,
+      'hasCompletedOnboarding': hasCompletedOnboarding,
+    };
+  }
 }
