@@ -12,6 +12,7 @@ import 'package:habitly/presentation/widgets/shared/inputs/input_label.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class RegisterPage extends ConsumerWidget {
@@ -24,31 +25,32 @@ class RegisterPage extends ConsumerWidget {
   ) async {
     final authNotifier = ref.read(authProvider.notifier);
 
-    // Check if email is already registered
-    final isRegistered = await authNotifier.isEmailRegistered(formState.email);
-    if (isRegistered) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('This email is already registered. Please login.'),
-            backgroundColor: AppColors.of(context).error,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Register the user
     await authNotifier.register(
       email: formState.email,
       fullName: formState.fullName,
       mobile: formState.mobile,
       gender: formState.selectedGender,
+      password: formState.password,
     );
 
-    // Navigate to habit selection after registration
+    final authState = ref.read(authProvider);
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/habit-selection');
+      authState.when(
+        data: (user) {
+          if (user != null) {
+            Navigator.pushReplacementNamed(context, AppRoutes.habitSelection);
+          }
+        },
+        error: (error, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: AppColors.of(context).error,
+            ),
+          );
+        },
+        loading: () {},
+      );
     }
   }
 
@@ -57,6 +59,7 @@ class RegisterPage extends ConsumerWidget {
     final colors = AppColors.of(context);
     final formState = ref.watch(registerFormProvider);
     final formNotifier = ref.read(registerFormProvider.notifier);
+    final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -95,7 +98,6 @@ class RegisterPage extends ConsumerWidget {
                             "Account Register",
                             style: AppTextStyles.heading(
                               context,
-                              FontEngine.google,
                             ).copyWith(fontSize: 18.sp),
                           ),
                         ),
@@ -178,7 +180,6 @@ class RegisterPage extends ConsumerWidget {
                               "Forgot Password?",
                               style: AppTextStyles.caption(
                                 context,
-                                FontEngine.google,
                               ).copyWith(fontSize: 12),
                             ),
                           ),
@@ -188,6 +189,7 @@ class RegisterPage extends ConsumerWidget {
                         // Register button - disabled when form is invalid
                         AppButton(
                           text: "Register",
+                          isLoading: isLoading,
                           onPressed: formState.isValid
                               ? () => _register(context, ref, formState)
                               : null,
@@ -199,7 +201,7 @@ class RegisterPage extends ConsumerWidget {
                         AppButton(
                           text: "Login",
                           onPressed: () =>
-                              Navigator.pushNamed(context, '/login'),
+                              Navigator.pushNamed(context, AppRoutes.login),
                           variant: AppButtonVariant.secondary,
                         ),
                         const SizedBox(height: 16),
@@ -214,7 +216,6 @@ class RegisterPage extends ConsumerWidget {
                                 "Or",
                                 style: AppTextStyles.caption(
                                   context,
-                                  FontEngine.google,
                                 ),
                               ),
                             ),

@@ -39,6 +39,8 @@ extension ReminderPeriodExtension on ReminderPeriod {
   }
 }
 
+const _sentinel = Object();
+
 class Habit {
   final String id;
   final String name;
@@ -63,18 +65,24 @@ class Habit {
     String? name,
     int? iconCodePoint,
     bool? isCompleted,
-    String? completionTime,
-    ReminderPeriod? reminderPeriod,
-    DateTime? targetDate,
+    Object? completionTime = _sentinel,
+    Object? reminderPeriod = _sentinel,
+    Object? targetDate = _sentinel,
   }) {
     return Habit(
       id: id ?? this.id,
       name: name ?? this.name,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       isCompleted: isCompleted ?? this.isCompleted,
-      completionTime: completionTime ?? this.completionTime,
-      reminderPeriod: reminderPeriod ?? this.reminderPeriod,
-      targetDate: targetDate ?? this.targetDate,
+      completionTime: identical(completionTime, _sentinel)
+          ? this.completionTime
+          : completionTime as String?,
+      reminderPeriod: identical(reminderPeriod, _sentinel)
+          ? this.reminderPeriod
+          : reminderPeriod as ReminderPeriod?,
+      targetDate: identical(targetDate, _sentinel)
+          ? this.targetDate
+          : targetDate as DateTime?,
     );
   }
 }

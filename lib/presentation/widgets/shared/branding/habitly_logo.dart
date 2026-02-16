@@ -25,7 +25,6 @@ class HabitLyLogo extends StatelessWidget {
           'HabitLy',
           style: AppTextStyles.heading(
             context,
-            FontEngine.google,
           ).copyWith(fontSize: fontSize, color: color),
         ),
       ],

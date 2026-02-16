@@ -77,10 +77,10 @@ class AppTextField extends StatelessWidget {
       maxLines: maxLines,
       textInputAction: textInputAction,
       onChanged: onChanged,
-      style: style ?? AppTextStyles.inputText(context, FontEngine.google),
+      style: style ?? AppTextStyles.inputText(context),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: AppTextStyles.inputHint(context, FontEngine.google),
+        hintStyle: AppTextStyles.inputHint(context),
         filled: !isUnderline,
         fillColor: isUnderline ? null : colors.surface,
         prefixIcon: prefixIcon,

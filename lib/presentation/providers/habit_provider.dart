@@ -12,32 +12,23 @@ import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/use_case_providers.dart';
 
 class HabitListNotifier extends AsyncNotifier<List<Habit>> {
-  HabitListNotifier(this.userEmail);
-  final String userEmail;
-
-  late final AddHabitUseCase _addHabitUseCase;
-  late final GetHabitsUseCase _getHabitsUseCase;
-  late final UpdateHabitUseCase _updateHabitUseCase;
-  late final DeleteHabitUseCase _deleteHabitUseCase;
-  late final SetupOnboardingHabitsUseCase _setupOnboardingHabitsUseCase;
-  late final UpdateHabitsReminderUseCase _updateHabitsReminderUseCase;
-  late final ToggleHabitCompletionUseCase _toggleHabitCompletionUseCase;
+  AddHabitUseCase get _addHabitUseCase => ref.read(addHabitUseCaseProvider);
+  GetHabitsUseCase get _getHabitsUseCase => ref.read(getHabitsUseCaseProvider);
+  UpdateHabitUseCase get _updateHabitUseCase =>
+      ref.read(updateHabitUseCaseProvider);
+  DeleteHabitUseCase get _deleteHabitUseCase =>
+      ref.read(deleteHabitUseCaseProvider);
+  SetupOnboardingHabitsUseCase get _setupOnboardingHabitsUseCase =>
+      ref.read(setupOnboardingHabitsUseCaseProvider);
+  UpdateHabitsReminderUseCase get _updateHabitsReminderUseCase =>
+      ref.read(updateHabitsReminderUseCaseProvider);
+  ToggleHabitCompletionUseCase get _toggleHabitCompletionUseCase =>
+      ref.read(toggleHabitCompletionUseCaseProvider);
 
   @override
   Future<List<Habit>> build() async {
-    _addHabitUseCase = ref.read(addHabitUseCaseProvider(userEmail));
-    _getHabitsUseCase = ref.read(getHabitsUseCaseProvider(userEmail));
-    _updateHabitUseCase = ref.read(updateHabitUseCaseProvider(userEmail));
-    _deleteHabitUseCase = ref.read(deleteHabitUseCaseProvider(userEmail));
-    _setupOnboardingHabitsUseCase = ref.read(
-      setupOnboardingHabitsUseCaseProvider(userEmail),
-    );
-    _updateHabitsReminderUseCase = ref.read(
-      updateHabitsReminderUseCaseProvider(userEmail),
-    );
-    _toggleHabitCompletionUseCase = ref.read(
-      toggleHabitCompletionUseCaseProvider(userEmail),
-    );
+    final user = ref.watch(authProvider).asData?.value;
+    if (user == null) return [];
 
     try {
       return await _getHabitsUseCase();
@@ -103,13 +94,6 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
   }
 }
 
-final habitProvider =
-    AsyncNotifierProvider.family<HabitListNotifier, List<Habit>, String>(
-      (userEmail) => HabitListNotifier(userEmail),
-    );
-
-final currentUserHabitsNotifierProvider = Provider<HabitListNotifier?>((ref) {
-  final email = ref.watch(currentUserEmailProvider);
-  if (email == null) return null;
-  return ref.read(habitProvider(email).notifier);
-});
+final habitProvider = AsyncNotifierProvider<HabitListNotifier, List<Habit>>(
+  HabitListNotifier.new,
+);

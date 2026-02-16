@@ -44,7 +44,7 @@ class TimeOptionCard extends StatelessWidget {
           children: [
             Text(
               time,
-              style: AppTextStyles.heading(context, FontEngine.google).copyWith(
+              style: AppTextStyles.heading(context).copyWith(
                 fontSize: 22.sp,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? colors.primary : colors.textPrimary,
@@ -53,7 +53,7 @@ class TimeOptionCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: AppTextStyles.body(context, FontEngine.google).copyWith(
+              style: AppTextStyles.body(context).copyWith(
                 color: isSelected ? colors.primary : colors.textSecondary,
               ),
             ),

@@ -13,6 +13,7 @@ import 'package:habitly/presentation/providers/filtered_habits_provider.dart';
 import 'package:habitly/presentation/providers/selected_date_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class HomePage extends ConsumerWidget {
@@ -32,7 +33,7 @@ class HomePage extends ConsumerWidget {
           // Already on home
           break;
         case BottomNavItem.add:
-          await Navigator.pushNamed(context, '/add-habit');
+          await Navigator.pushNamed(context, AppRoutes.addHabit);
           break;
         case BottomNavItem.profile:
           // Navigate to profile, for now just placeholder
@@ -43,12 +44,12 @@ class HomePage extends ConsumerWidget {
     Future<void> onAccountTap() async {
       await ref.read(authProvider.notifier).logout();
       if (context.mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     }
 
     Future<void> editHabit(Habit habit) async {
-      await Navigator.pushNamed(context, '/edit-habit', arguments: habit.id);
+      await Navigator.pushNamed(context, AppRoutes.editHabit, arguments: habit.id);
     }
 
     Future<void> deleteHabit(Habit habit) async {
@@ -81,23 +82,17 @@ class HomePage extends ConsumerWidget {
       );
 
       if (confirmed == true) {
-        final notifier = ref.read(currentUserHabitsNotifierProvider);
-        if (notifier != null) {
-          await notifier.deleteHabit(habit.id);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Habit "${habit.name}" deleted')),
-            );
-          }
+        await ref.read(habitProvider.notifier).deleteHabit(habit.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Habit "${habit.name}" deleted')),
+          );
         }
       }
     }
 
     Future<void> toggleHabitCompletion(Habit habit) async {
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier != null) {
-        await notifier.toggleCompletion(habit.id);
-      }
+      await ref.read(habitProvider.notifier).toggleCompletion(habit.id);
     }
 
     return Scaffold(
@@ -119,7 +114,6 @@ class HomePage extends ConsumerWidget {
                         'Today,',
                         style: AppTextStyles.heading(
                           context,
-                          FontEngine.google,
                         ).copyWith(fontSize: 18.sp),
                       ),
                       const SizedBox(width: 8),
@@ -127,7 +121,6 @@ class HomePage extends ConsumerWidget {
                         dateFormat.format(now),
                         style: AppTextStyles.heading(
                           context,
-                          FontEngine.google,
                         ).copyWith(fontSize: 18.sp),
                       ),
                     ],
@@ -171,7 +164,6 @@ class HomePage extends ConsumerWidget {
                 'My Habit',
                 style: AppTextStyles.heading(
                   context,
-                  FontEngine.google,
                 ).copyWith(fontSize: 16.sp),
               ),
             ),
@@ -185,7 +177,7 @@ class HomePage extends ConsumerWidget {
                 error: (e, st) => Center(
                   child: Text(
                     'Error: $e',
-                    style: AppTextStyles.caption(context, FontEngine.google),
+                    style: AppTextStyles.caption(context),
                   ),
                 ),
                 data: (habits) {
@@ -205,7 +197,6 @@ class HomePage extends ConsumerWidget {
                             'No habits for this day',
                             style: AppTextStyles.caption(
                               context,
-                              FontEngine.google,
                             ),
                           ),
                         ],

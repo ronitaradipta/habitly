@@ -10,11 +10,7 @@ class UpdateHabitsReminderUseCase {
     final habits = await _habitRepository.getHabits();
 
     for (final habit in habits) {
-      final updatedHabit = Habit(
-        id: habit.id,
-        name: habit.name,
-        iconCodePoint: habit.iconCodePoint,
-        isCompleted: habit.isCompleted,
+      final updatedHabit = habit.copyWith(
         completionTime: period.time,
         reminderPeriod: period,
         targetDate: habit.targetDate ?? DateTime.now(),

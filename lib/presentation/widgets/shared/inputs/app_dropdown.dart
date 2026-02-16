@@ -31,11 +31,11 @@ class AppDropdown<T> extends StatelessWidget {
           value: value,
           isExpanded: true,
           dropdownColor: colors.surface,
-          style: AppTextStyles.inputText(context, FontEngine.google),
+          style: AppTextStyles.inputText(context),
           hint: hint != null
               ? Text(
                   hint!,
-                  style: AppTextStyles.inputHint(context, FontEngine.google),
+                  style: AppTextStyles.inputHint(context),
                 )
               : null,
           items: items,

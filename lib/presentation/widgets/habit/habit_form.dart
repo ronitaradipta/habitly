@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/validators/habit_validators.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_text_field.dart';
@@ -10,7 +11,6 @@ import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
-import 'package:habitly/core/utils/validators.dart';
 import 'package:sizer/sizer.dart';
 
 enum FormMode { create, edit }
@@ -33,13 +33,19 @@ class HabitForm extends ConsumerStatefulWidget {
 
 class _HabitFormState extends ConsumerState<HabitForm> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final _dateFormat = DateFormat('MM/dd/yyyy');
 
   @override
   void initState() {
     super.initState();
-    // Initialize with existing habit data if in edit mode
     if (widget.mode == FormMode.edit && widget.initialHabit != null) {
       _nameController.text = widget.initialHabit!.name;
+      if (widget.initialHabit!.targetDate != null) {
+        _dateController.text = _dateFormat.format(
+          widget.initialHabit!.targetDate!,
+        );
+      }
       Future.microtask(() {
         ref
             .read(habitFormProvider.notifier)
@@ -51,11 +57,8 @@ class _HabitFormState extends ConsumerState<HabitForm> {
   @override
   void dispose() {
     _nameController.dispose();
+    _dateController.dispose();
     super.dispose();
-  }
-
-  void _onAccountTap() {
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   Future<void> _selectDate() async {
@@ -68,14 +71,14 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     );
     if (picked != null) {
       ref.read(habitFormProvider.notifier).selectDate(picked);
+      _dateController.text = _dateFormat.format(picked);
     }
   }
 
   Future<void> _saveHabit() async {
     final formState = ref.read(habitFormProvider);
 
-    // Use centralized validators from validators.dart
-    final nameResult = Validators.validateHabitName(_nameController.text);
+    final nameResult = HabitValidators.validateHabitName(_nameController.text);
     if (!nameResult.isValid) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,7 +90,9 @@ class _HabitFormState extends ConsumerState<HabitForm> {
       return;
     }
 
-    final dateResult = Validators.validateHabitDate(formState.selectedDate);
+    final dateResult = HabitValidators.validateHabitDate(
+      formState.selectedDate,
+    );
     if (!dateResult.isValid) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +104,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
       return;
     }
 
-    final periodResult = Validators.validateHabitPeriod(
+    final periodResult = HabitValidators.validateHabitPeriod(
       formState.selectedPeriod,
     );
     if (!periodResult.isValid) {
@@ -113,17 +118,9 @@ class _HabitFormState extends ConsumerState<HabitForm> {
       return;
     }
 
-    // Call appropriate provider method based on mode
+    final notifier = ref.read(habitProvider.notifier);
+
     if (widget.mode == FormMode.create) {
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to add habits')),
-          );
-        }
-        return;
-      }
       await notifier.addHabit(
         name: _nameController.text,
         iconCodePoint: Icons.fitness_center.codePoint,
@@ -138,7 +135,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
         Navigator.pop(context);
       }
     } else {
-      // Edit mode
       if (widget.initialHabit == null) return;
 
       final updatedHabit = widget.initialHabit!.copyWith(
@@ -148,15 +144,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
         completionTime: formState.selectedPeriod?.time,
       );
 
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to update habits')),
-          );
-        }
-        return;
-      }
       await notifier.updateHabit(updatedHabit);
 
       if (mounted) {
@@ -171,7 +158,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final dateFormat = DateFormat('MM/dd/yyyy');
     final formState = ref.watch(habitFormProvider);
     final title = widget.mode == FormMode.create
         ? 'Add New Habit'
@@ -179,6 +165,8 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     final buttonText = widget.mode == FormMode.create
         ? 'Save Habit'
         : 'Update Habit';
+
+    final isLoading = ref.watch(habitProvider).isLoading;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -191,7 +179,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Icon(
@@ -200,34 +187,16 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                       color: colors.textPrimary,
                     ),
                   ),
-
-                  // Title
                   Expanded(
                     child: Text(
                       title,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.heading(
                         context,
-                        FontEngine.google,
                       ).copyWith(fontSize: 16.sp),
                     ),
                   ),
-
-                  // Account icon and theme switch
-                  Row(
-                    children: [
-                      const ThemeSwitchButton(),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _onAccountTap,
-                        child: Icon(
-                          Icons.person_outline,
-                          size: 28,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const ThemeSwitchButton(),
                 ],
               ),
             ),
@@ -241,28 +210,22 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                   children: [
                     const SizedBox(height: 16),
 
-                    // Habit Name Field
                     AppTextField(
                       controller: _nameController,
                       hintText: 'Habit Name',
                       borderStyle: AppTextFieldBorderStyle.underline,
-                      style: AppTextStyles.body(context, FontEngine.google),
+                      style: AppTextStyles.body(context),
                     ),
 
                     const SizedBox(height: 32),
 
-                    // Date Picker Field
                     AppTextField(
-                      controller: TextEditingController(
-                        text: formState.selectedDate != null
-                            ? dateFormat.format(formState.selectedDate!)
-                            : '',
-                      ),
+                      controller: _dateController,
                       readOnly: true,
                       onTap: _selectDate,
                       hintText: 'Select Date',
                       borderStyle: AppTextFieldBorderStyle.underline,
-                      style: AppTextStyles.body(context, FontEngine.google),
+                      style: AppTextStyles.body(context),
                       suffixIcon: Icon(
                         Icons.calendar_today_outlined,
                         color: colors.textSecondary,
@@ -271,18 +234,15 @@ class _HabitFormState extends ConsumerState<HabitForm> {
 
                     const SizedBox(height: 32),
 
-                    // Reminder Time Section
                     Text(
                       'When we should remind you ?',
                       style: AppTextStyles.heading(
                         context,
-                        FontEngine.google,
                       ).copyWith(fontSize: 14.sp),
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Time Period Buttons
                     Wrap(
                       spacing: 16,
                       runSpacing: 16,
@@ -301,9 +261,9 @@ class _HabitFormState extends ConsumerState<HabitForm> {
 
                     const SizedBox(height: 48),
 
-                    // Save Button
                     AppButton(
                       text: buttonText,
+                      isLoading: isLoading,
                       onPressed: _saveHabit,
                       variant: AppButtonVariant.primary,
                     ),

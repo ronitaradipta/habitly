@@ -10,6 +10,7 @@ import 'package:habitly/presentation/providers/reminder_time_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 class ReminderTimePage extends ConsumerWidget {
@@ -27,15 +28,14 @@ class ReminderTimePage extends ConsumerWidget {
       final period = ReminderPeriodExtension.fromId(selectedTime);
       if (period == null) return;
 
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier == null) return;
+      final notifier = ref.read(habitProvider.notifier);
 
       await notifier.updateHabitsReminder(period);
     }
     // Mark onboarding as complete
     await ref.read(authProvider.notifier).markOnboardingComplete();
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/onboarding-complete');
+      Navigator.pushReplacementNamed(context, AppRoutes.onboardingComplete);
     }
   }
 
@@ -43,7 +43,7 @@ class ReminderTimePage extends ConsumerWidget {
     // Mark onboarding as complete even when skipping
     await ref.read(authProvider.notifier).markOnboardingComplete();
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/onboarding-complete');
+      Navigator.pushReplacementNamed(context, AppRoutes.onboardingComplete);
     }
   }
 
@@ -71,7 +71,6 @@ class ReminderTimePage extends ConsumerWidget {
                     "When you wanna us remind you ?",
                     style: AppTextStyles.heading(
                       context,
-                      FontEngine.google,
                     ).copyWith(fontSize: 18.sp),
                   ),
                 ),
