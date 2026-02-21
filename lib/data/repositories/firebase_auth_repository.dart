@@ -1,12 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:habitly/core/utils/auth_error_mapper.dart';
+import 'package:habitly/data/datasources/auth_datasource.dart';
 import 'package:habitly/domain/repositories/auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
-  final firebase_auth.FirebaseAuth _auth;
+  final AuthDatasource _datasource;
 
-  FirebaseAuthRepository({firebase_auth.FirebaseAuth? auth})
-    : _auth = auth ?? firebase_auth.FirebaseAuth.instance;
+  FirebaseAuthRepository({required AuthDatasource datasource})
+    : _datasource = datasource;
 
   @override
   Future<String> signUp({
@@ -14,11 +15,7 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
   }) async {
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user!.uid;
+      return await _datasource.signUp(email: email, password: password);
     } on firebase_auth.FirebaseAuthException catch (e) {
       throw Exception(AuthErrorMapper.mapException(e));
     }
@@ -30,11 +27,7 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
   }) async {
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user!.uid;
+      return await _datasource.signIn(email: email, password: password);
     } on firebase_auth.FirebaseAuthException catch (e) {
       throw Exception(AuthErrorMapper.mapException(e));
     }
@@ -42,13 +35,12 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _datasource.signOut();
   }
 
   @override
-  String? get currentUserId => _auth.currentUser?.uid;
+  String? get currentUserId => _datasource.currentUserId;
 
   @override
-  Stream<String?> get authStateChanges =>
-      _auth.authStateChanges().map((user) => user?.uid);
+  Stream<String?> get authStateChanges => _datasource.authStateChanges;
 }

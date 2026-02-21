@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
+import 'package:habitly/data/datasources/auth_datasource.dart';
+import 'package:habitly/data/datasources/habit_datasource.dart';
+import 'package:habitly/data/datasources/theme_datasource.dart';
+import 'package:habitly/data/datasources/user_datasource.dart';
 import 'package:habitly/data/repositories/firebase_auth_repository.dart';
 import 'package:habitly/data/repositories/firestore_theme_repository.dart';
 import 'package:habitly/data/repositories/firestore_habit_repository.dart';
@@ -33,18 +37,32 @@ void init() {
   getIt.registerLazySingleton(() => FirebaseAuth.instance);
   getIt.registerLazySingleton(() => FirebaseFirestore.instance);
 
+  // Datasources
+  getIt.registerLazySingleton<AuthDatasource>(
+    () => FirebaseAuthDatasource(auth: getIt()),
+  );
+  getIt.registerLazySingleton<HabitDatasource>(
+    () => FirestoreHabitDatasource(firestore: getIt()),
+  );
+  getIt.registerLazySingleton<UserDatasource>(
+    () => FirestoreUserDatasource(firestore: getIt()),
+  );
+  getIt.registerLazySingleton<ThemeDatasource>(
+    () => FirestoreThemeDatasource(firestore: getIt()),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
-    () => FirebaseAuthRepository(auth: getIt()),
+    () => FirebaseAuthRepository(datasource: getIt()),
   );
   getIt.registerLazySingleton<UserRepository>(
-    () => FirestoreUserRepository(firestore: getIt(), auth: getIt()),
+    () => FirestoreUserRepository(datasource: getIt(), auth: getIt()),
   );
   getIt.registerLazySingleton<ThemeRepository>(
-    () => FirestoreThemeRepository(firestore: getIt(), auth: getIt()),
+    () => FirestoreThemeRepository(datasource: getIt(), auth: getIt()),
   );
   getIt.registerLazySingleton<HabitRepository>(
-    () => FirestoreHabitRepository(firestore: getIt(), auth: getIt()),
+    () => FirestoreHabitRepository(datasource: getIt(), auth: getIt()),
   );
 
   // Use Cases - Auth
