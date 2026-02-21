@@ -1,37 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:habitly/data/datasources/habit_datasource.dart';
 import 'package:habitly/data/models/habit_model.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/repositories/habit_repository.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
-  final FirebaseFirestore _firestore;
+  final HabitDatasource _datasource;
   final FirebaseAuth _auth;
 
-  FirestoreHabitRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+  FirestoreHabitRepository({
+    required HabitDatasource datasource,
+    FirebaseAuth? auth,
+  }) : _datasource = datasource,
+       _auth = auth ?? FirebaseAuth.instance;
 
   String? get _uid => _auth.currentUser?.uid;
-
-  CollectionReference<HabitModel> _habitsRef(String uid) {
-    return _firestore
-        .collection('users')
-        .doc(uid)
-        .collection('habits')
-        .withConverter<HabitModel>(
-          fromFirestore: HabitModel.fromFirestore,
-          toFirestore: (model, _) => model.toFirestore(),
-        );
-  }
 
   @override
   Future<List<Habit>> getHabits() async {
     final uid = _uid;
     if (uid == null) return [];
 
-    final snapshot = await _habitsRef(uid).get();
-    return snapshot.docs.map((doc) => doc.data().toEntity()).toList();
+    final models = await _datasource.getHabits(uid);
+    return models.map((model) => model.toEntity()).toList();
   }
 
   @override
@@ -39,18 +30,8 @@ class FirestoreHabitRepository implements HabitRepository {
     final uid = _uid;
     if (uid == null) return [];
 
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
-
-    final snapshot = await _habitsRef(uid)
-        .where(
-          'targetDate',
-          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-        )
-        .where('targetDate', isLessThan: Timestamp.fromDate(endOfDay))
-        .get();
-
-    return snapshot.docs.map((doc) => doc.data().toEntity()).toList();
+    final models = await _datasource.getHabitsByDate(uid, date);
+    return models.map((model) => model.toEntity()).toList();
   }
 
   @override
@@ -58,8 +39,8 @@ class FirestoreHabitRepository implements HabitRepository {
     final uid = _uid;
     if (uid == null) return null;
 
-    final doc = await _habitsRef(uid).doc(id).get();
-    return doc.data()?.toEntity();
+    final model = await _datasource.getHabitById(uid, id);
+    return model?.toEntity();
   }
 
   @override
@@ -67,8 +48,7 @@ class FirestoreHabitRepository implements HabitRepository {
     final uid = _uid;
     if (uid == null) throw Exception('User not logged in');
 
-    final docRef = _habitsRef(uid).doc();
-    await docRef.set(HabitModel.fromEntity(habit));
+    await _datasource.addHabit(uid, HabitModel.fromEntity(habit));
   }
 
   @override
@@ -76,9 +56,7 @@ class FirestoreHabitRepository implements HabitRepository {
     final uid = _uid;
     if (uid == null) throw Exception('User not logged in');
 
-    await _habitsRef(
-      uid,
-    ).doc(habit.id).set(HabitModel.fromEntity(habit), SetOptions(merge: true));
+    await _datasource.updateHabit(uid, HabitModel.fromEntity(habit));
   }
 
   @override
@@ -86,6 +64,6 @@ class FirestoreHabitRepository implements HabitRepository {
     final uid = _uid;
     if (uid == null) throw Exception('User not logged in');
 
-    await _habitsRef(uid).doc(id).delete();
+    await _datasource.deleteHabit(uid, id);
   }
 }
