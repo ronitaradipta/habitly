@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/presentation/providers/filtered_habits_provider.dart';
+import 'package:habitly/presentation/providers/selected_category_provider.dart';
 
 class ProgressData {
   final int completedCount;
@@ -45,7 +46,13 @@ String _getMotivationalMessage(int percentage) {
 }
 
 final progressProvider = Provider<ProgressData>((ref) {
-  final habitsAsync = ref.watch(filteredHabitsProvider);
+  final dateFiltered = ref.watch(dateFilteredHabitsProvider);
+  final selectedCategory = ref.watch(selectedCategoryProvider);
+
+  final habitsAsync = dateFiltered.whenData((habits) {
+    if (selectedCategory == null) return habits;
+    return habits.where((h) => h.category == selectedCategory).toList();
+  });
 
   return habitsAsync.when(
     loading: () => const ProgressData(

@@ -8,6 +8,7 @@ import 'package:habitly/presentation/widgets/habit/home_habit_tile.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/presentation/widgets/habit/week_day_selector.dart';
 import 'package:habitly/presentation/widgets/habit/habit_progress_indicator.dart';
+import 'package:habitly/presentation/widgets/habit/category_filter_bar.dart';
 import 'package:habitly/presentation/widgets/habit/custom_calendar.dart';
 import 'package:habitly/presentation/widgets/shared/navigation/sidebar_drawer.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
@@ -137,6 +138,11 @@ class HomePage extends ConsumerWidget {
                 style: AppTextStyles.heading(context).copyWith(fontSize: 16.sp),
               ),
             ),
+
+            const SizedBox(height: 8),
+
+            // Category Filter Bar
+            const CategoryFilterBar(),
 
             const SizedBox(height: 8),
 
