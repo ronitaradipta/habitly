@@ -35,7 +35,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    await _datasource.signOut();
+    try {
+      await _datasource.signOut();
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      throw Exception(AuthErrorMapper.mapException(e));
+    }
   }
 
   @override

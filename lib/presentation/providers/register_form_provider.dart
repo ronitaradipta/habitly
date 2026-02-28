@@ -88,6 +88,6 @@ class RegisterFormNotifier extends Notifier<RegisterFormState> {
 }
 
 final registerFormProvider =
-    NotifierProvider<RegisterFormNotifier, RegisterFormState>(
+    NotifierProvider.autoDispose<RegisterFormNotifier, RegisterFormState>(
       RegisterFormNotifier.new,
     );

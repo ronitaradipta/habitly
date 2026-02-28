@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 
 enum BottomNavItem { home, add, profile }
 
 class BottomNavBar extends StatelessWidget {
   final BottomNavItem currentItem;
-  final ValueChanged<BottomNavItem>? onItemTapped;
 
-  const BottomNavBar({super.key, required this.currentItem, this.onItemTapped});
+  const BottomNavBar({super.key, required this.currentItem});
+
+  void _handleTap(BuildContext context, BottomNavItem item) {
+    switch (item) {
+      case BottomNavItem.home:
+        // Already on home
+        break;
+      case BottomNavItem.add:
+        Navigator.pushNamed(context, AppRoutes.addHabit);
+        break;
+      case BottomNavItem.profile:
+        // Navigate to profile, placeholder for now
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +35,7 @@ class BottomNavBar extends StatelessWidget {
         children: [
           // Home icon
           GestureDetector(
-            onTap: () => onItemTapped?.call(BottomNavItem.home),
+            onTap: () => _handleTap(context, BottomNavItem.home),
             child: Icon(
               currentItem == BottomNavItem.home
                   ? Icons.home
@@ -35,7 +49,7 @@ class BottomNavBar extends StatelessWidget {
 
           // Center Add button
           GestureDetector(
-            onTap: () => onItemTapped?.call(BottomNavItem.add),
+            onTap: () => _handleTap(context, BottomNavItem.add),
             child: Container(
               width: 48,
               height: 48,
@@ -49,7 +63,7 @@ class BottomNavBar extends StatelessWidget {
 
           // Profile icon
           GestureDetector(
-            onTap: () => onItemTapped?.call(BottomNavItem.profile),
+            onTap: () => _handleTap(context, BottomNavItem.profile),
             child: Icon(
               currentItem == BottomNavItem.profile
                   ? Icons.person

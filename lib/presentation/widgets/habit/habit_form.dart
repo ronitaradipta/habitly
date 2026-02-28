@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:habitly/core/constants/app_decorations.dart';
+import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/presentation/widgets/shared/form_row_selector.dart';
 import 'package:habitly/domain/validators/habit_validators.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_text_field.dart';
-import 'package:habitly/presentation/widgets/habit/time_period_button.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/presentation/widgets/habit/frequency_selector.dart';
+import 'package:habitly/presentation/widgets/habit/reminder_selector.dart';
+import 'package:habitly/presentation/widgets/habit/category_selector.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
@@ -33,7 +39,6 @@ class HabitForm extends ConsumerStatefulWidget {
 
 class _HabitFormState extends ConsumerState<HabitForm> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
   final _dateFormat = DateFormat('MM/dd/yyyy');
 
   @override
@@ -41,11 +46,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     super.initState();
     if (widget.mode == FormMode.edit && widget.initialHabit != null) {
       _nameController.text = widget.initialHabit!.name;
-      if (widget.initialHabit!.targetDate != null) {
-        _dateController.text = _dateFormat.format(
-          widget.initialHabit!.targetDate!,
-        );
-      }
       Future.microtask(() {
         ref
             .read(habitFormProvider.notifier)
@@ -57,7 +57,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
   @override
   void dispose() {
     _nameController.dispose();
-    _dateController.dispose();
     super.dispose();
   }
 
@@ -71,7 +70,28 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     );
     if (picked != null) {
       ref.read(habitFormProvider.notifier).selectDate(picked);
-      _dateController.text = _dateFormat.format(picked);
+    }
+  }
+
+  Future<void> _selectEndDate() async {
+    final formState = ref.read(habitFormProvider);
+    final startDate = formState.selectedDate ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: formState.endDate ?? startDate,
+      firstDate: startDate,
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      ref.read(habitFormProvider.notifier).setEndDate(picked);
+    }
+  }
+
+  void _showValidationError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -80,13 +100,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
 
     final nameResult = HabitValidators.validateHabitName(_nameController.text);
     if (!nameResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(nameResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
+      _showValidationError(nameResult.errorMessage ?? 'Validation failed');
       return;
     }
 
@@ -94,63 +108,74 @@ class _HabitFormState extends ConsumerState<HabitForm> {
       formState.selectedDate,
     );
     if (!dateResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(dateResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
+      _showValidationError(dateResult.errorMessage ?? 'Validation failed');
       return;
     }
 
-    final periodResult = HabitValidators.validateHabitPeriod(
-      formState.selectedPeriod,
+    final endDateResult = HabitValidators.validateEndDate(
+      formState.endDate,
+      formState.selectedDate,
     );
-    if (!periodResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(periodResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
+    if (!endDateResult.isValid) {
+      _showValidationError(endDateResult.errorMessage ?? 'Validation failed');
       return;
     }
 
-    final notifier = ref.read(habitProvider.notifier);
+    ref.read(habitFormProvider.notifier).setSaving(true);
 
-    if (widget.mode == FormMode.create) {
-      await notifier.addHabit(
-        name: _nameController.text,
-        iconCodePoint: Icons.fitness_center.codePoint,
-        date: formState.selectedDate!,
-        period: formState.selectedPeriod!,
-      );
+    try {
+      final notifier = ref.read(habitProvider.notifier);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Habit added successfully!')),
+      if (widget.mode == FormMode.create) {
+        final iconName =
+            formState.selectedCategory?.iconName ?? 'fitness_center';
+
+        await notifier.addHabit(
+          name: _nameController.text,
+          iconName: iconName,
+          date: formState.selectedDate!,
+          hasReminder: formState.hasReminder,
+          reminderTime: formState.reminderTime,
+          categoryId: formState.selectedCategory?.id,
+          frequency: formState.selectedFrequency ?? HabitFrequency.daily,
+          customDays: formState.customDays,
+          endDate: formState.endDate,
         );
-        Navigator.pop(context);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Habit added successfully!')),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        if (widget.initialHabit == null) return;
+
+        final updatedHabit = widget.initialHabit!.copyWith(
+          name: _nameController.text,
+          targetDate: formState.selectedDate,
+          hasReminder: formState.hasReminder,
+          reminderTime: formState.reminderTime != null
+              ? TimeUtils.formatForStorage(formState.reminderTime!)
+              : null,
+          categoryId: formState.selectedCategory?.id,
+          frequency: formState.selectedFrequency ?? HabitFrequency.daily,
+          customDays: formState.customDays,
+          endDate: formState.endDate,
+        );
+
+        await notifier.updateHabit(updatedHabit);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Habit updated successfully!')),
+          );
+          Navigator.pop(context);
+        }
       }
-    } else {
-      if (widget.initialHabit == null) return;
-
-      final updatedHabit = widget.initialHabit!.copyWith(
-        name: _nameController.text,
-        targetDate: formState.selectedDate,
-        reminderPeriod: formState.selectedPeriod,
-        completionTime: formState.selectedPeriod?.time,
-      );
-
-      await notifier.updateHabit(updatedHabit);
-
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Habit updated successfully!')),
-        );
-        Navigator.pop(context);
+        ref.read(habitFormProvider.notifier).setSaving(false);
       }
     }
   }
@@ -166,7 +191,11 @@ class _HabitFormState extends ConsumerState<HabitForm> {
         ? 'Save Habit'
         : 'Update Habit';
 
-    final isLoading = ref.watch(habitProvider).isLoading;
+    final isLoading = formState.isSaving;
+
+    final dateText = formState.selectedDate != null
+        ? _dateFormat.format(formState.selectedDate!)
+        : 'Select date';
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -219,44 +248,157 @@ class _HabitFormState extends ConsumerState<HabitForm> {
 
                     const SizedBox(height: 32),
 
-                    AppTextField(
-                      controller: _dateController,
-                      readOnly: true,
-                      onTap: _selectDate,
-                      hintText: 'Select Date',
-                      borderStyle: AppTextFieldBorderStyle.underline,
-                      style: AppTextStyles.body(context),
-                      suffixIcon: Icon(
-                        Icons.calendar_today_outlined,
-                        color: colors.textSecondary,
+                    // Section header: General information + REQUIRED badge
+                    Row(
+                      children: [
+                        Text(
+                          'General information',
+                          style: AppTextStyles.heading(context).copyWith(
+                            fontSize: 14.sp,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(width: 8.sp),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.sp,
+                            vertical: 2.sp,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'REQUIRED',
+                            style: AppTextStyles.caption(context).copyWith(
+                              color: colors.error,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.sp),
+
+                    // Grouped card: Category + Start date
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          // Category row
+                          Padding(
+                            padding: EdgeInsets.all(12.sp),
+                            child: CategorySelector(
+                              selectedCategory: formState.selectedCategory,
+                              onCategorySelected: (category) {
+                                ref
+                                    .read(habitFormProvider.notifier)
+                                    .setCategory(category);
+                              },
+                              onCategoryRemoved: () {
+                                ref
+                                    .read(habitFormProvider.notifier)
+                                    .clearCategory();
+                              },
+                            ),
+                          ),
+
+                          Divider(
+                            height: 1,
+                            indent: 16.sp,
+                            endIndent: 16.sp,
+                            color: colors.textSecondary.withValues(alpha: 0.15),
+                          ),
+
+                          // Start date row
+                          FormRowSelector(
+                            icon: Icons.calendar_today,
+                            iconColor: AppDecorations.dateBlue,
+                            label: 'Start date',
+                            value: dateText,
+                            hasValue: formState.selectedDate != null,
+                            onTap: _selectDate,
+                          ),
+
+                          Divider(
+                            height: 1,
+                            indent: 16.sp,
+                            endIndent: 16.sp,
+                            color: colors.textSecondary.withValues(alpha: 0.15),
+                          ),
+
+                          // End date row
+                          FormRowSelector(
+                            icon: Icons.event_busy,
+                            iconColor: AppDecorations.dateOrange,
+                            label: 'End date',
+                            value: formState.endDate != null
+                                ? _dateFormat.format(formState.endDate!)
+                                : 'No end date',
+                            hasValue: formState.endDate != null,
+                            onTap: _selectEndDate,
+                            trailing: formState.endDate != null
+                                ? GestureDetector(
+                                    onTap: () {
+                                      ref
+                                          .read(habitFormProvider.notifier)
+                                          .setEndDate(null);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(4.sp),
+                                      child: Icon(
+                                        Icons.close,
+                                        color: colors.textSecondary,
+                                        size: 18.sp,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ],
                       ),
                     ),
 
                     const SizedBox(height: 32),
 
-                    Text(
-                      'When we should remind you ?',
-                      style: AppTextStyles.heading(
-                        context,
-                      ).copyWith(fontSize: 14.sp),
+                    FrequencySelector(
+                      selectedFrequency: formState.selectedFrequency,
+                      customDays: formState.customDays,
+                      onFrequencyChanged: (frequency) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .selectFrequency(frequency);
+                      },
+                      onCustomDaysChanged: (days) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .setCustomDays(days);
+                      },
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: ReminderPeriod.values.map((period) {
-                        return TimePeriodButton(
-                          label: period.label,
-                          isSelected: formState.selectedPeriod == period,
-                          onTap: () {
-                            ref
-                                .read(habitFormProvider.notifier)
-                                .selectPeriod(period);
-                          },
-                        );
-                      }).toList(),
+                    ReminderSelector(
+                      hasReminder: formState.hasReminder,
+                      reminderTime: formState.reminderTime,
+                      onReminderToggled: (enabled) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .setReminder(enabled);
+                      },
+                      onTimeSelected: (time) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .setReminderTime(time);
+                      },
+                      onReminderRemoved: () {
+                        ref.read(habitFormProvider.notifier).clearReminder();
+                      },
                     ),
 
                     const SizedBox(height: 48),

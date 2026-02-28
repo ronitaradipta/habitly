@@ -34,6 +34,6 @@ class HabitSelectionNotifier extends Notifier<HabitSelectionState> {
 }
 
 final habitSelectionProvider =
-    NotifierProvider<HabitSelectionNotifier, HabitSelectionState>(
+    NotifierProvider.autoDispose<HabitSelectionNotifier, HabitSelectionState>(
       HabitSelectionNotifier.new,
     );

@@ -12,6 +12,6 @@ class PasswordVisibilityNotifier extends Notifier<Map<String, bool>> {
 }
 
 final passwordVisibilityProvider =
-    NotifierProvider<PasswordVisibilityNotifier, Map<String, bool>>(
+    NotifierProvider.autoDispose<PasswordVisibilityNotifier, Map<String, bool>>(
   PasswordVisibilityNotifier.new,
 );

@@ -1,18 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:habitly/data/datasources/auth_datasource.dart';
 import 'package:habitly/data/datasources/theme_datasource.dart';
 import 'package:habitly/domain/repositories/theme_repository.dart';
 
 class FirestoreThemeRepository implements ThemeRepository {
   final ThemeDatasource _datasource;
-  final FirebaseAuth _auth;
+  final AuthDatasource _authDatasource;
 
   FirestoreThemeRepository({
     required ThemeDatasource datasource,
-    FirebaseAuth? auth,
+    required AuthDatasource authDatasource,
   }) : _datasource = datasource,
-       _auth = auth ?? FirebaseAuth.instance;
+       _authDatasource = authDatasource;
 
-  String? get _uid => _auth.currentUser?.uid;
+  String? get _uid => _authDatasource.currentUserId;
 
   @override
   Future<String> getTheme() async {

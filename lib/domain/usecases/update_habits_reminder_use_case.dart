@@ -1,4 +1,3 @@
-import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/repositories/habit_repository.dart';
 
 class UpdateHabitsReminderUseCase {
@@ -6,13 +5,13 @@ class UpdateHabitsReminderUseCase {
 
   UpdateHabitsReminderUseCase(this._habitRepository);
 
-  Future<void> call(ReminderPeriod period) async {
+  Future<void> call(String reminderTime) async {
     final habits = await _habitRepository.getHabits();
 
     for (final habit in habits) {
       final updatedHabit = habit.copyWith(
-        completionTime: period.time,
-        reminderPeriod: period,
+        hasReminder: true,
+        reminderTime: reminderTime,
         targetDate: habit.targetDate ?? DateTime.now(),
       );
       await _habitRepository.updateHabit(updatedHabit);

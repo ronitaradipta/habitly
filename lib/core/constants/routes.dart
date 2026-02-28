@@ -4,6 +4,7 @@ class AppRoutes {
   static const launch = '/launch';
   static const login = '/login';
   static const register = '/register';
+  static const categorySelection = '/category-selection';
   static const habitSelection = '/habit-selection';
   static const reminderTime = '/reminder-time';
   static const onboardingComplete = '/onboarding-complete';

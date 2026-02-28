@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/injection_container.dart' as di;
 import 'package:habitly/presentation/pages/add_habit_page.dart';
+import 'package:habitly/presentation/pages/category_selection_page.dart';
 import 'package:habitly/presentation/pages/edit_habit_page.dart';
 import 'package:habitly/presentation/pages/habit_selection_page.dart';
 import 'package:habitly/presentation/pages/home_page.dart';
@@ -48,7 +49,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider).asData?.value ?? ThemeMode.system;
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
@@ -63,6 +64,9 @@ class MyApp extends ConsumerWidget {
           primary: AppColors.light.primary,
           surface: AppColors.light.surface,
           surfaceContainerLowest: AppColors.light.background,
+          tertiary: AppColors.light.primary,
+          tertiaryContainer: AppColors.light.primary,
+          onTertiaryContainer: Colors.white,
         ),
       ),
       darkTheme: ThemeData(
@@ -74,6 +78,9 @@ class MyApp extends ConsumerWidget {
           primary: AppColors.dark.primary,
           surface: AppColors.dark.surface,
           surfaceContainerLowest: AppColors.dark.background,
+          tertiary: AppColors.dark.primary,
+          tertiaryContainer: AppColors.dark.primary,
+          onTertiaryContainer: Colors.white,
         ),
       ),
       themeMode: themeMode,
@@ -87,9 +94,11 @@ class MyApp extends ConsumerWidget {
         AppRoutes.launch: (context) => const LaunchPage(),
         AppRoutes.login: (context) => const LoginPage(),
         AppRoutes.register: (context) => const RegisterPage(),
+        AppRoutes.categorySelection: (context) => const CategorySelectionPage(),
         AppRoutes.habitSelection: (context) => const HabitSelectionPage(),
         AppRoutes.reminderTime: (context) => const ReminderTimePage(),
-        AppRoutes.onboardingComplete: (context) => const OnboardingCompletePage(),
+        AppRoutes.onboardingComplete: (context) =>
+            const OnboardingCompletePage(),
         AppRoutes.home: (context) => const HomePage(),
         AppRoutes.addHabit: (context) => const AddHabitPage(),
         AppRoutes.editHabit: (context) => const EditHabitPage(),

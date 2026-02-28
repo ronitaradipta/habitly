@@ -1,5 +1,4 @@
 import 'package:habitly/core/utils/validators.dart';
-import 'package:habitly/domain/entities/habit.dart';
 
 class HabitValidators {
   HabitValidators._();
@@ -23,9 +22,10 @@ class HabitValidators {
     return ValidationResult.success();
   }
 
-  static ValidationResult validateHabitPeriod(ReminderPeriod? value) {
-    if (value == null) {
-      return ValidationResult.error('Please select a reminder period');
+  static ValidationResult validateEndDate(DateTime? endDate, DateTime? startDate) {
+    if (endDate == null) return ValidationResult.success();
+    if (startDate != null && endDate.isBefore(startDate)) {
+      return ValidationResult.error('End date must be on or after start date');
     }
     return ValidationResult.success();
   }

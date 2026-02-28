@@ -37,6 +37,7 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   }
 }
 
-final loginFormProvider = NotifierProvider<LoginFormNotifier, LoginFormState>(
-  LoginFormNotifier.new,
-);
+final loginFormProvider =
+    NotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>(
+      LoginFormNotifier.new,
+    );
