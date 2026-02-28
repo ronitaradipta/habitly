@@ -1,60 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:sizer/sizer.dart';
 
-class FrequencySelector extends StatefulWidget {
-  final HabitFrequency? selectedFrequency;
-  final int? customDays;
-  final Function(HabitFrequency) onFrequencyChanged;
-  final Function(int) onCustomDaysChanged;
-
-  const FrequencySelector({
-    super.key,
-    this.selectedFrequency,
-    this.customDays,
-    required this.onFrequencyChanged,
-    required this.onCustomDaysChanged,
-  });
+class FrequencySelector extends ConsumerWidget {
+  const FrequencySelector({super.key});
 
   @override
-  State<FrequencySelector> createState() => _FrequencySelectorState();
-}
-
-class _FrequencySelectorState extends State<FrequencySelector> {
-  late TextEditingController _customDaysController;
-  late int _customDaysValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _customDaysValue = widget.customDays ?? 2;
-    _customDaysController = TextEditingController(
-      text: _customDaysValue.toString(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _customDaysController.dispose();
-    super.dispose();
-  }
-
-  void _updateCustomDays(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed != null && parsed >= 1 && parsed <= 365) {
-      setState(() {
-        _customDaysValue = parsed;
-      });
-      widget.onCustomDaysChanged(parsed);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final selectedFrequency =
+        ref.watch(habitFormProvider.select((s) => s.selectedFrequency));
     final frequencies = HabitFrequency.values;
 
     return Column(
@@ -71,7 +31,6 @@ class _FrequencySelectorState extends State<FrequencySelector> {
         ),
         SizedBox(height: 8.sp),
 
-        // Frequency options card
         Container(
           decoration: BoxDecoration(
             color: colors.surface,
@@ -80,11 +39,7 @@ class _FrequencySelectorState extends State<FrequencySelector> {
           child: Column(
             children: [
               for (int i = 0; i < frequencies.length; i++) ...[
-                _FrequencyListItem(
-                  frequency: frequencies[i],
-                  isSelected: widget.selectedFrequency == frequencies[i],
-                  onTap: () => widget.onFrequencyChanged(frequencies[i]),
-                ),
+                _FrequencyListItem(frequency: frequencies[i]),
                 if (i < frequencies.length - 1)
                   Divider(
                     height: 1,
@@ -97,59 +52,32 @@ class _FrequencySelectorState extends State<FrequencySelector> {
           ),
         ),
 
-        // Custom Days Input
-        if (widget.selectedFrequency == HabitFrequency.customDays) ...[
+        if (selectedFrequency == HabitFrequency.customDays) ...[
           SizedBox(height: 16.sp),
-          _CustomDaysInput(
-            controller: _customDaysController,
-            value: _customDaysValue,
-            onChanged: _updateCustomDays,
-            onIncrement: () {
-              if (_customDaysValue < 365) {
-                final newValue = _customDaysValue + 1;
-                _customDaysController.text = newValue.toString();
-                _updateCustomDays(newValue.toString());
-              }
-            },
-            onDecrement: () {
-              if (_customDaysValue > 1) {
-                final newValue = _customDaysValue - 1;
-                _customDaysController.text = newValue.toString();
-                _updateCustomDays(newValue.toString());
-              }
-            },
-          ),
+          const _CustomDaysInput(),
           SizedBox(height: 8.sp),
-          Text(
-            'Repeat every $_customDaysValue day${_customDaysValue > 1 ? "s" : ""}',
-            style: AppTextStyles.caption(
-              context,
-            ).copyWith(color: colors.textSecondary, fontSize: 12.sp),
-            textAlign: TextAlign.center,
-          ),
+          _CustomDaysLabel(),
         ],
       ],
     );
   }
 }
 
-class _FrequencyListItem extends StatelessWidget {
+class _FrequencyListItem extends ConsumerWidget {
   final HabitFrequency frequency;
-  final bool isSelected;
-  final VoidCallback onTap;
 
-  const _FrequencyListItem({
-    required this.frequency,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _FrequencyListItem({required this.frequency});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final isSelected = ref.watch(
+      habitFormProvider.select((s) => s.selectedFrequency == frequency),
+    );
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () =>
+          ref.read(habitFormProvider.notifier).selectFrequency(frequency),
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.sp, vertical: 14.sp),
@@ -173,24 +101,49 @@ class _FrequencyListItem extends StatelessWidget {
   }
 }
 
-class _CustomDaysInput extends StatelessWidget {
-  final TextEditingController controller;
-  final int value;
-  final Function(String) onChanged;
-  final VoidCallback onIncrement;
-  final VoidCallback onDecrement;
+class _CustomDaysInput extends ConsumerStatefulWidget {
+  const _CustomDaysInput();
 
-  const _CustomDaysInput({
-    required this.controller,
-    required this.value,
-    required this.onChanged,
-    required this.onIncrement,
-    required this.onDecrement,
-  });
+  @override
+  ConsumerState<_CustomDaysInput> createState() => _CustomDaysInputState();
+}
+
+class _CustomDaysInputState extends ConsumerState<_CustomDaysInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: (ref.read(habitFormProvider).customDays ?? 2).toString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateCustomDays(String value) {
+    final parsed = int.tryParse(value);
+    if (parsed != null && parsed >= 1 && parsed <= 365) {
+      ref.read(habitFormProvider.notifier).setCustomDays(parsed);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final customDays =
+        ref.watch(habitFormProvider.select((s) => s.customDays ?? 2));
+
+    ref.listen(habitFormProvider.select((s) => s.customDays), (prev, next) {
+      final newText = (next ?? 2).toString();
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    });
 
     return Container(
       decoration: BoxDecoration(
@@ -204,17 +157,19 @@ class _CustomDaysInput extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Decrement Button
           _StepperButton(
             icon: Icons.remove,
-            onTap: onDecrement,
-            isEnabled: value > 1,
+            isEnabled: customDays > 1,
+            onTap: () {
+              final newValue = customDays - 1;
+              _controller.text = newValue.toString();
+              ref.read(habitFormProvider.notifier).setCustomDays(newValue);
+            },
           ),
 
-          // Number Input
           Expanded(
             child: TextField(
-              controller: controller,
+              controller: _controller,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: AppTextStyles.heading(context).copyWith(
@@ -234,18 +189,38 @@ class _CustomDaysInput extends StatelessWidget {
                   color: colors.textSecondary.withValues(alpha: 0.5),
                 ),
               ),
-              onChanged: onChanged,
+              onChanged: _updateCustomDays,
             ),
           ),
 
-          // Increment Button
           _StepperButton(
             icon: Icons.add,
-            onTap: onIncrement,
-            isEnabled: value < 365,
+            isEnabled: customDays < 365,
+            onTap: () {
+              final newValue = customDays + 1;
+              _controller.text = newValue.toString();
+              ref.read(habitFormProvider.notifier).setCustomDays(newValue);
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CustomDaysLabel extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    final customDays =
+        ref.watch(habitFormProvider.select((s) => s.customDays ?? 2));
+
+    return Text(
+      'Repeat every $customDays day${customDays > 1 ? "s" : ""}',
+      style: AppTextStyles.caption(
+        context,
+      ).copyWith(color: colors.textSecondary, fontSize: 12.sp),
+      textAlign: TextAlign.center,
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:habitly/core/constants/app_decorations.dart';
+
 import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/widgets/shared/form_row_selector.dart';
@@ -15,6 +15,7 @@ import 'package:habitly/presentation/widgets/habit/reminder_selector.dart';
 import 'package:habitly/presentation/widgets/habit/category_selector.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
+import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:sizer/sizer.dart';
@@ -197,10 +198,9 @@ class _HabitFormState extends ConsumerState<HabitForm> {
         ? _dateFormat.format(formState.selectedDate!)
         : 'Select date';
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: Column(
+    return ThemeScaffold(
+      showThemeButton: false,
+      body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // App Bar
@@ -318,7 +318,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                           // Start date row
                           FormRowSelector(
                             icon: Icons.calendar_today,
-                            iconColor: AppDecorations.dateBlue,
+                            iconColor: colors.dateBlue,
                             label: 'Start date',
                             value: dateText,
                             hasValue: formState.selectedDate != null,
@@ -335,7 +335,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                           // End date row
                           FormRowSelector(
                             icon: Icons.event_busy,
-                            iconColor: AppDecorations.dateOrange,
+                            iconColor: colors.dateOrange,
                             label: 'End date',
                             value: formState.endDate != null
                                 ? _dateFormat.format(formState.endDate!)
@@ -366,20 +366,7 @@ class _HabitFormState extends ConsumerState<HabitForm> {
 
                     const SizedBox(height: 32),
 
-                    FrequencySelector(
-                      selectedFrequency: formState.selectedFrequency,
-                      customDays: formState.customDays,
-                      onFrequencyChanged: (frequency) {
-                        ref
-                            .read(habitFormProvider.notifier)
-                            .selectFrequency(frequency);
-                      },
-                      onCustomDaysChanged: (days) {
-                        ref
-                            .read(habitFormProvider.notifier)
-                            .setCustomDays(days);
-                      },
-                    ),
+                    const FrequencySelector(),
 
                     const SizedBox(height: 32),
 
@@ -415,7 +402,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
             ),
           ],
         ),
-      ),
     );
   }
 }

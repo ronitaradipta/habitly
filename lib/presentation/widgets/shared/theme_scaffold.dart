@@ -6,12 +6,14 @@ class ThemeScaffold extends StatelessWidget {
   final Color? backgroundColor;
   final Widget body;
   final Widget? drawer;
+  final bool showThemeButton;
 
   const ThemeScaffold({
     super.key,
     this.backgroundColor,
     required this.body,
     this.drawer,
+    this.showThemeButton = true,
   });
 
   @override
@@ -22,12 +24,18 @@ class ThemeScaffold extends StatelessWidget {
       backgroundColor: backgroundColor ?? colors.background,
       drawer: drawer,
       body: SafeArea(
-        child: Stack(
-          children: [
-            body,
-            const Positioned(top: 16, right: 16, child: ThemeSwitchButton()),
-          ],
-        ),
+        child: showThemeButton
+            ? Stack(
+                children: [
+                  body,
+                  const Positioned(
+                    top: 16,
+                    right: 16,
+                    child: ThemeSwitchButton(),
+                  ),
+                ],
+              )
+            : body,
       ),
     );
   }

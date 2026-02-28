@@ -6,20 +6,27 @@ import 'package:habitly/core/utils/time_utils.dart';
 class ReminderTimeState {
   final String? selectedTime; // preset id: 'morning', 'afternoon', 'evening'
   final TimeOfDay? customTime;
+  final bool isLoading;
 
-  const ReminderTimeState({this.selectedTime, this.customTime});
+  const ReminderTimeState({
+    this.selectedTime,
+    this.customTime,
+    this.isLoading = false,
+  });
 
   bool get hasSelection => selectedTime != null || customTime != null;
+
+  ReminderPreset? get _selectedPreset {
+    if (selectedTime == null) return null;
+    return reminderPresets.where((p) => p.id == selectedTime).firstOrNull;
+  }
 
   /// Returns the HH:mm time value for the current selection.
   String? get timeValue {
     if (customTime != null) {
       return TimeUtils.formatForStorage(customTime!);
     }
-    if (selectedTime != null) {
-      return reminderPresetTimes[selectedTime];
-    }
-    return null;
+    return _selectedPreset?.timeValue;
   }
 
   /// Returns display-friendly time string.
@@ -27,10 +34,7 @@ class ReminderTimeState {
     if (customTime != null) {
       return TimeUtils.formatForDisplay(customTime!);
     }
-    if (selectedTime != null) {
-      return reminderPresetDisplayTimes[selectedTime];
-    }
-    return null;
+    return _selectedPreset?.displayTime;
   }
 
   ReminderTimeState copyWith({
@@ -38,10 +42,12 @@ class ReminderTimeState {
     TimeOfDay? customTime,
     bool clearCustom = false,
     bool clearPreset = false,
+    bool? isLoading,
   }) {
     return ReminderTimeState(
       selectedTime: clearPreset ? null : (selectedTime ?? this.selectedTime),
       customTime: clearCustom ? null : (customTime ?? this.customTime),
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
@@ -51,15 +57,19 @@ class ReminderTimeNotifier extends Notifier<ReminderTimeState> {
   ReminderTimeState build() => const ReminderTimeState();
 
   void selectTime(String timeId) {
-    state = ReminderTimeState(selectedTime: timeId);
+    state = state.copyWith(selectedTime: timeId, clearCustom: true);
   }
 
   void setCustomTime(TimeOfDay time) {
-    state = ReminderTimeState(customTime: time);
+    state = state.copyWith(customTime: time, clearPreset: true);
   }
 
   void clearSelection() {
-    state = const ReminderTimeState();
+    state = state.copyWith(clearCustom: true, clearPreset: true);
+  }
+
+  void setLoading(bool loading) {
+    state = state.copyWith(isLoading: loading);
   }
 }
 

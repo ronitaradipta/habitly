@@ -10,6 +10,7 @@ import 'package:habitly/presentation/widgets/habit/week_day_selector.dart';
 import 'package:habitly/presentation/widgets/habit/habit_progress_indicator.dart';
 import 'package:habitly/presentation/widgets/habit/custom_calendar.dart';
 import 'package:habitly/presentation/widgets/shared/navigation/sidebar_drawer.dart';
+import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/presentation/providers/filtered_habits_provider.dart';
@@ -45,11 +46,10 @@ class HomePage extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      backgroundColor: colors.background,
+    return ThemeScaffold(
+      showThemeButton: false,
       drawer: const SidebarDrawer(),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // App Bar
@@ -194,7 +194,6 @@ class HomePage extends ConsumerWidget {
             BottomNavBar(currentItem: BottomNavItem.home),
           ],
         ),
-      ),
     );
   }
 }
