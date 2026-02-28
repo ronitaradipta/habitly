@@ -1,6 +1,16 @@
 # habitly
 
-A new Flutter project.
+A habit tracking Flutter application with Firebase authentication.
+
+## Setup Firebase
+
+`lib/firebase_options.dart` is excluded from version control (it contains API keys). To set it up:
+
+1. Install the FlutterFire CLI: `dart pub global activate flutterfire_cli`
+2. Run: `flutterfire configure`
+3. Select your Firebase project (`habitly-361f0`) and target platforms (Android, iOS)
+
+The CLI will generate `lib/firebase_options.dart` automatically. See `lib/firebase_options.dart.example` for the expected file structure.
 
 ## Getting Started
 
