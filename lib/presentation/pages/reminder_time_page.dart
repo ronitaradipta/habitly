@@ -1,62 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/constants/reminder_presets.dart';
 import 'package:habitly/core/constants/routes.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/presentation/providers/reminder_time_provider.dart';
+import 'package:habitly/presentation/theme/icon_mapper.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/presentation/widgets/shared/dialogs/app_time_picker.dart';
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_button_row.dart';
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_progress_bar.dart';
 import 'package:sizer/sizer.dart';
 
-class _TimePreset {
-  final String id;
-  final String displayTime;
-  final String label;
-  final IconData icon;
-  const _TimePreset({
-    required this.id,
-    required this.displayTime,
-    required this.label,
-    required this.icon,
-  });
-}
-
-class ReminderTimePage extends ConsumerStatefulWidget {
+class ReminderTimePage extends ConsumerWidget {
   const ReminderTimePage({super.key});
 
-  static const _timeOptions = [
-    _TimePreset(
-      id: 'morning',
-      displayTime: '7:00 AM',
-      label: 'Morning',
-      icon: Icons.wb_sunny_outlined,
-    ),
-    _TimePreset(
-      id: 'afternoon',
-      displayTime: '1:00 PM',
-      label: 'Afternoon',
-      icon: Icons.wb_cloudy_outlined,
-    ),
-    _TimePreset(
-      id: 'evening',
-      displayTime: '7:00 PM',
-      label: 'Evening',
-      icon: Icons.nightlight_outlined,
-    ),
-  ];
-
-  @override
-  ConsumerState<ReminderTimePage> createState() => _ReminderTimePageState();
-}
-
-class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
-  bool _isLoading = false;
-
-  Future<void> _showTimePicker() async {
+  Future<void> _showTimePicker(BuildContext context, WidgetRef ref) async {
     final reminderState = ref.read(reminderTimeProvider);
 
     final picked = await showAppTimePicker(
@@ -69,8 +30,8 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
     }
   }
 
-  Future<void> _proceed() async {
-    setState(() => _isLoading = true);
+  Future<void> _proceed(BuildContext context, WidgetRef ref) async {
+    ref.read(reminderTimeProvider.notifier).setLoading(true);
 
     try {
       final reminderState = ref.read(reminderTimeProvider);
@@ -82,33 +43,29 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
       }
 
       await ref.read(authProvider.notifier).markOnboardingComplete();
-      if (mounted) {
+      if (context.mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      ref.read(reminderTimeProvider.notifier).setLoading(false);
     }
   }
 
-  Future<void> _skip() async {
-    setState(() => _isLoading = true);
+  Future<void> _skip(BuildContext context, WidgetRef ref) async {
+    ref.read(reminderTimeProvider.notifier).setLoading(true);
 
     try {
       await ref.read(authProvider.notifier).markOnboardingComplete();
-      if (mounted) {
+      if (context.mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      ref.read(reminderTimeProvider.notifier).setLoading(false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
     final reminderState = ref.watch(reminderTimeProvider);
     final reminderNotifier = ref.read(reminderTimeProvider.notifier);
@@ -142,7 +99,7 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
-              children: ReminderTimePage._timeOptions.map((preset) {
+              children: reminderPresets.map((preset) {
                 final isSelected =
                     reminderState.customTime == null &&
                     reminderState.selectedTime == preset.id;
@@ -166,7 +123,7 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: GestureDetector(
-              onTap: _showTimePicker,
+              onTap: () => _showTimePicker(context, ref),
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 16.sp,
@@ -242,10 +199,12 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
           if (reminderState.hasSelection && habitCount > 0)
             const SizedBox(height: 8),
           OnboardingButtonRow(
-            onSkip: _skip,
+            onSkip: () => _skip(context, ref),
             proceedText: "Let's Go!",
-            onProceed: reminderState.hasSelection ? _proceed : null,
-            isLoading: _isLoading,
+            onProceed: reminderState.hasSelection
+                ? () => _proceed(context, ref)
+                : null,
+            isLoading: reminderState.isLoading,
           ),
         ],
       ),
@@ -254,7 +213,7 @@ class _ReminderTimePageState extends ConsumerState<ReminderTimePage> {
 }
 
 class _TimeChip extends StatelessWidget {
-  final _TimePreset preset;
+  final ReminderPreset preset;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -292,7 +251,7 @@ class _TimeChip extends StatelessWidget {
         child: Column(
           children: [
             Icon(
-              preset.icon,
+              IconMapper.toIconData(preset.iconName),
               color: isSelected ? colors.primary : colors.textSecondary,
               size: 22.sp,
             ),

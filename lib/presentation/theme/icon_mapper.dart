@@ -15,6 +15,9 @@ class IconMapper {
     'task_alt': Icons.task_alt,
     'palette': Icons.palette,
     'interests': Icons.interests,
+    'wb_sunny_outlined': Icons.wb_sunny_outlined,
+    'wb_cloudy_outlined': Icons.wb_cloudy_outlined,
+    'nightlight_outlined': Icons.nightlight_outlined,
   };
 
   static IconData toIconData(String iconName) {

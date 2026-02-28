@@ -10,7 +10,4 @@ class AppDecorations {
   );
 
   static const cardBorderRadius = BorderRadius.all(Radius.circular(16));
-
-  static const dateBlue = Color(0xFF1E88E5);
-  static const dateOrange = Color(0xFFFB8C00);
 }

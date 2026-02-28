@@ -32,7 +32,10 @@ class LoginPage extends ConsumerWidget {
           if (user.hasCompletedOnboarding) {
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else {
-            Navigator.pushReplacementNamed(context, AppRoutes.habitSelection);
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.categorySelection,
+            );
           }
         },
       );
