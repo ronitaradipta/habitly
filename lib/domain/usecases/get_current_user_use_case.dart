@@ -2,11 +2,11 @@ import 'package:habitly/domain/entities/user.dart';
 import 'package:habitly/domain/repositories/user_repository.dart';
 
 class GetCurrentUserUseCase {
-  final UserRepository _repository;
+  final UserRepository _userRepository;
 
-  GetCurrentUserUseCase(this._repository);
+  GetCurrentUserUseCase(this._userRepository);
 
   Future<User?> call() async {
-    return _repository.getCurrentUser();
+    return await _userRepository.getCurrentUser();
   }
 }

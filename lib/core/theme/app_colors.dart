@@ -9,6 +9,8 @@ class AppColors {
   final Color border;
   final Color error;
   final Color disabled;
+  final Color dateBlue;
+  final Color dateOrange;
 
   const AppColors({
     required this.background,
@@ -19,6 +21,8 @@ class AppColors {
     required this.border,
     required this.error,
     required this.disabled,
+    required this.dateBlue,
+    required this.dateOrange,
   });
 
   static AppColors of(BuildContext context) {
@@ -35,6 +39,8 @@ class AppColors {
     border: Color(0xFFE0E0E0),
     error: Color(0xFFE53935),
     disabled: Color(0xFFBDBDBD),
+    dateBlue: Color(0xFF1E88E5),
+    dateOrange: Color(0xFFFB8C00),
   );
 
   static const dark = AppColors(
@@ -46,5 +52,7 @@ class AppColors {
     border: Color(0xFF404040),
     error: Color(0xFFEF5350),
     disabled: Color(0xFF616161),
+    dateBlue: Color(0xFF42A5F5),
+    dateOrange: Color(0xFFFFB74D),
   );
 }

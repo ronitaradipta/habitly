@@ -9,8 +9,7 @@ class MarkOnboardingCompleteUseCase {
   Future<User> call(User currentUser) async {
     final updatedUser = currentUser.copyWith(hasCompletedOnboarding: true);
 
-    await _userRepository.saveRegisteredUser(updatedUser);
-    await _userRepository.saveCurrentUser(updatedUser);
+    await _userRepository.saveUser(updatedUser);
 
     return updatedUser;
   }

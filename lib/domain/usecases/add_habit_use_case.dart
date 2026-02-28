@@ -1,4 +1,5 @@
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
 import 'package:habitly/domain/repositories/habit_repository.dart';
 
 class AddHabitUseCase {
@@ -8,18 +9,26 @@ class AddHabitUseCase {
 
   Future<void> call({
     required String name,
-    required int iconCodePoint,
+    required String iconName,
     required DateTime targetDate,
-    required ReminderPeriod reminderPeriod,
+    bool hasReminder = false,
+    String? reminderTime,
+    String? categoryId,
+    HabitFrequency frequency = HabitFrequency.daily,
+    int? customDays,
+    DateTime? endDate,
   }) async {
     final habit = Habit(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: '',
       name: name,
-      iconCodePoint: iconCodePoint,
-      isCompleted: false,
-      completionTime: reminderPeriod.time,
-      reminderPeriod: reminderPeriod,
+      iconName: iconName,
       targetDate: targetDate,
+      hasReminder: hasReminder,
+      reminderTime: reminderTime,
+      categoryId: categoryId,
+      frequency: frequency,
+      customDays: customDays,
+      endDate: endDate,
     );
     await _habitRepository.addHabit(habit);
   }

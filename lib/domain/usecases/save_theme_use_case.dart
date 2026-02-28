@@ -1,11 +1,11 @@
 import 'package:habitly/domain/repositories/theme_repository.dart';
 
 class SaveThemeUseCase {
-  final ThemeRepository _repository;
+  final ThemeRepository _themeRepository;
 
-  SaveThemeUseCase(this._repository);
+  SaveThemeUseCase(this._themeRepository);
 
-  Future<void> call(String themeModeName) {
-    return _repository.saveTheme(themeModeName);
+  Future<void> call(String themeModeName) async {
+    await _themeRepository.saveTheme(themeModeName);
   }
 }

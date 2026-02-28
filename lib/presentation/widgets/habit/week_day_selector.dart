@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/core/utils/date_utils.dart';
+import 'package:habitly/presentation/providers/selected_date_provider.dart';
 
-class WeekDaySelector extends StatelessWidget {
-  final DateTime selectedDate;
-  final ValueChanged<DateTime>? onDateSelected;
-
-  const WeekDaySelector({
-    super.key,
-    required this.selectedDate,
-    this.onDateSelected,
-  });
+class WeekDaySelector extends ConsumerWidget {
+  const WeekDaySelector({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
-    final now = DateTime.now();
+    final selectedDate = ref.watch(selectedDateProvider);
 
-    // Get the start of the week (Monday)
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    // Get the start of the week (Monday) for the selected date
+    final startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
 
     // Generate list of days for the week
     final weekDays = List.generate(7, (index) {
@@ -32,18 +27,18 @@ class WeekDaySelector extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: List.generate(7, (index) {
         final day = weekDays[index];
-        final isToday = AppDateUtils.isSameDay(day, now);
+        final isToday = AppDateUtils.isSameDay(day, DateTime.now());
         final isSelected = AppDateUtils.isSameDay(day, selectedDate);
 
         return GestureDetector(
-          onTap: () => onDateSelected?.call(day),
+          onTap: () => ref.read(selectedDateProvider.notifier).selectDate(day),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Day label (M, T, W, etc.)
               Text(
                 dayLabels[index],
-                style: AppTextStyles.body(context, FontEngine.google).copyWith(
+                style: AppTextStyles.body(context).copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.textPrimary,
                 ),
@@ -70,7 +65,7 @@ class WeekDaySelector extends StatelessWidget {
                     child: Center(
                       child: Text(
                         day.day.toString(),
-                        style: AppTextStyles.body(context, FontEngine.google)
+                        style: AppTextStyles.body(context)
                             .copyWith(
                               fontWeight: FontWeight.w500,
                               fontSize: 12,

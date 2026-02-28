@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
+import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/presentation/widgets/shared/form_row_selector.dart';
+import 'package:habitly/domain/validators/habit_validators.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/theme_switch_button.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_text_field.dart';
-import 'package:habitly/presentation/widgets/habit/time_period_button.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/presentation/widgets/habit/frequency_selector.dart';
+import 'package:habitly/presentation/widgets/habit/reminder_selector.dart';
+import 'package:habitly/presentation/widgets/habit/category_selector.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
+import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
-import 'package:habitly/core/utils/validators.dart';
 import 'package:sizer/sizer.dart';
 
 enum FormMode { create, edit }
@@ -33,11 +40,11 @@ class HabitForm extends ConsumerStatefulWidget {
 
 class _HabitFormState extends ConsumerState<HabitForm> {
   final TextEditingController _nameController = TextEditingController();
+  final _dateFormat = DateFormat('MM/dd/yyyy');
 
   @override
   void initState() {
     super.initState();
-    // Initialize with existing habit data if in edit mode
     if (widget.mode == FormMode.edit && widget.initialHabit != null) {
       _nameController.text = widget.initialHabit!.name;
       Future.microtask(() {
@@ -54,10 +61,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     super.dispose();
   }
 
-  void _onAccountTap() {
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
   Future<void> _selectDate() async {
     final formState = ref.read(habitFormProvider);
     final picked = await showDatePicker(
@@ -71,99 +74,109 @@ class _HabitFormState extends ConsumerState<HabitForm> {
     }
   }
 
+  Future<void> _selectEndDate() async {
+    final formState = ref.read(habitFormProvider);
+    final startDate = formState.selectedDate ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: formState.endDate ?? startDate,
+      firstDate: startDate,
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+    );
+    if (picked != null) {
+      ref.read(habitFormProvider.notifier).setEndDate(picked);
+    }
+  }
+
+  void _showValidationError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   Future<void> _saveHabit() async {
     final formState = ref.read(habitFormProvider);
 
-    // Use centralized validators from validators.dart
-    final nameResult = Validators.validateHabitName(_nameController.text);
+    final nameResult = HabitValidators.validateHabitName(_nameController.text);
     if (!nameResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(nameResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
+      _showValidationError(nameResult.errorMessage ?? 'Validation failed');
       return;
     }
 
-    final dateResult = Validators.validateHabitDate(formState.selectedDate);
-    if (!dateResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(dateResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
-      return;
-    }
-
-    final periodResult = Validators.validateHabitPeriod(
-      formState.selectedPeriod,
+    final dateResult = HabitValidators.validateHabitDate(
+      formState.selectedDate,
     );
-    if (!periodResult.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(periodResult.errorMessage ?? 'Validation failed'),
-          ),
-        );
-      }
+    if (!dateResult.isValid) {
+      _showValidationError(dateResult.errorMessage ?? 'Validation failed');
       return;
     }
 
-    // Call appropriate provider method based on mode
-    if (widget.mode == FormMode.create) {
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier == null) {
+    final endDateResult = HabitValidators.validateEndDate(
+      formState.endDate,
+      formState.selectedDate,
+    );
+    if (!endDateResult.isValid) {
+      _showValidationError(endDateResult.errorMessage ?? 'Validation failed');
+      return;
+    }
+
+    ref.read(habitFormProvider.notifier).setSaving(true);
+
+    try {
+      final notifier = ref.read(habitProvider.notifier);
+
+      if (widget.mode == FormMode.create) {
+        final iconName =
+            formState.selectedCategory?.iconName ?? 'fitness_center';
+
+        await notifier.addHabit(
+          name: _nameController.text,
+          iconName: iconName,
+          date: formState.selectedDate!,
+          hasReminder: formState.hasReminder,
+          reminderTime: formState.reminderTime,
+          categoryId: formState.selectedCategory?.id,
+          frequency: formState.selectedFrequency ?? HabitFrequency.daily,
+          customDays: formState.customDays,
+          endDate: formState.endDate,
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to add habits')),
+            const SnackBar(content: Text('Habit added successfully!')),
           );
+          Navigator.pop(context);
         }
-        return;
-      }
-      await notifier.addHabit(
-        name: _nameController.text,
-        iconCodePoint: Icons.fitness_center.codePoint,
-        date: formState.selectedDate!,
-        period: formState.selectedPeriod!,
-      );
+      } else {
+        if (widget.initialHabit == null) return;
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Habit added successfully!')),
+        final updatedHabit = widget.initialHabit!.copyWith(
+          name: _nameController.text,
+          targetDate: formState.selectedDate,
+          hasReminder: formState.hasReminder,
+          reminderTime: formState.reminderTime != null
+              ? TimeUtils.formatForStorage(formState.reminderTime!)
+              : null,
+          categoryId: formState.selectedCategory?.id,
+          frequency: formState.selectedFrequency ?? HabitFrequency.daily,
+          customDays: formState.customDays,
+          endDate: formState.endDate,
         );
-        Navigator.pop(context);
-      }
-    } else {
-      // Edit mode
-      if (widget.initialHabit == null) return;
 
-      final updatedHabit = widget.initialHabit!.copyWith(
-        name: _nameController.text,
-        targetDate: formState.selectedDate,
-        reminderPeriod: formState.selectedPeriod,
-        completionTime: formState.selectedPeriod?.time,
-      );
+        await notifier.updateHabit(updatedHabit);
 
-      final notifier = ref.read(currentUserHabitsNotifierProvider);
-      if (notifier == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in to update habits')),
+            const SnackBar(content: Text('Habit updated successfully!')),
           );
+          Navigator.pop(context);
         }
-        return;
       }
-      await notifier.updateHabit(updatedHabit);
-
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Habit updated successfully!')),
-        );
-        Navigator.pop(context);
+        ref.read(habitFormProvider.notifier).setSaving(false);
       }
     }
   }
@@ -171,7 +184,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final dateFormat = DateFormat('MM/dd/yyyy');
     final formState = ref.watch(habitFormProvider);
     final title = widget.mode == FormMode.create
         ? 'Add New Habit'
@@ -180,10 +192,15 @@ class _HabitFormState extends ConsumerState<HabitForm> {
         ? 'Save Habit'
         : 'Update Habit';
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: SafeArea(
-        child: Column(
+    final isLoading = formState.isSaving;
+
+    final dateText = formState.selectedDate != null
+        ? _dateFormat.format(formState.selectedDate!)
+        : 'Select date';
+
+    return ThemeScaffold(
+      showThemeButton: false,
+      body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // App Bar
@@ -191,7 +208,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 children: [
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Icon(
@@ -200,34 +216,16 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                       color: colors.textPrimary,
                     ),
                   ),
-
-                  // Title
                   Expanded(
                     child: Text(
                       title,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.heading(
                         context,
-                        FontEngine.google,
                       ).copyWith(fontSize: 16.sp),
                     ),
                   ),
-
-                  // Account icon and theme switch
-                  Row(
-                    children: [
-                      const ThemeSwitchButton(),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _onAccountTap,
-                        child: Icon(
-                          Icons.person_outline,
-                          size: 28,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const ThemeSwitchButton(),
                 ],
               ),
             ),
@@ -241,69 +239,160 @@ class _HabitFormState extends ConsumerState<HabitForm> {
                   children: [
                     const SizedBox(height: 16),
 
-                    // Habit Name Field
                     AppTextField(
                       controller: _nameController,
                       hintText: 'Habit Name',
                       borderStyle: AppTextFieldBorderStyle.underline,
-                      style: AppTextStyles.body(context, FontEngine.google),
+                      style: AppTextStyles.body(context),
                     ),
 
                     const SizedBox(height: 32),
 
-                    // Date Picker Field
-                    AppTextField(
-                      controller: TextEditingController(
-                        text: formState.selectedDate != null
-                            ? dateFormat.format(formState.selectedDate!)
-                            : '',
+                    // Section header: General information + REQUIRED badge
+                    Row(
+                      children: [
+                        Text(
+                          'General information',
+                          style: AppTextStyles.heading(context).copyWith(
+                            fontSize: 14.sp,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(width: 8.sp),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.sp,
+                            vertical: 2.sp,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'REQUIRED',
+                            style: AppTextStyles.caption(context).copyWith(
+                              color: colors.error,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.sp),
+
+                    // Grouped card: Category + Start date
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      readOnly: true,
-                      onTap: _selectDate,
-                      hintText: 'Select Date',
-                      borderStyle: AppTextFieldBorderStyle.underline,
-                      style: AppTextStyles.body(context, FontEngine.google),
-                      suffixIcon: Icon(
-                        Icons.calendar_today_outlined,
-                        color: colors.textSecondary,
+                      child: Column(
+                        children: [
+                          // Category row
+                          Padding(
+                            padding: EdgeInsets.all(12.sp),
+                            child: CategorySelector(
+                              selectedCategory: formState.selectedCategory,
+                              onCategorySelected: (category) {
+                                ref
+                                    .read(habitFormProvider.notifier)
+                                    .setCategory(category);
+                              },
+                              onCategoryRemoved: () {
+                                ref
+                                    .read(habitFormProvider.notifier)
+                                    .clearCategory();
+                              },
+                            ),
+                          ),
+
+                          Divider(
+                            height: 1,
+                            indent: 16.sp,
+                            endIndent: 16.sp,
+                            color: colors.textSecondary.withValues(alpha: 0.15),
+                          ),
+
+                          // Start date row
+                          FormRowSelector(
+                            icon: Icons.calendar_today,
+                            iconColor: colors.dateBlue,
+                            label: 'Start date',
+                            value: dateText,
+                            hasValue: formState.selectedDate != null,
+                            onTap: _selectDate,
+                          ),
+
+                          Divider(
+                            height: 1,
+                            indent: 16.sp,
+                            endIndent: 16.sp,
+                            color: colors.textSecondary.withValues(alpha: 0.15),
+                          ),
+
+                          // End date row
+                          FormRowSelector(
+                            icon: Icons.event_busy,
+                            iconColor: colors.dateOrange,
+                            label: 'End date',
+                            value: formState.endDate != null
+                                ? _dateFormat.format(formState.endDate!)
+                                : 'No end date',
+                            hasValue: formState.endDate != null,
+                            onTap: _selectEndDate,
+                            trailing: formState.endDate != null
+                                ? GestureDetector(
+                                    onTap: () {
+                                      ref
+                                          .read(habitFormProvider.notifier)
+                                          .setEndDate(null);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(4.sp),
+                                      child: Icon(
+                                        Icons.close,
+                                        color: colors.textSecondary,
+                                        size: 18.sp,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ],
                       ),
                     ),
 
                     const SizedBox(height: 32),
 
-                    // Reminder Time Section
-                    Text(
-                      'When we should remind you ?',
-                      style: AppTextStyles.heading(
-                        context,
-                        FontEngine.google,
-                      ).copyWith(fontSize: 14.sp),
-                    ),
+                    const FrequencySelector(),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    // Time Period Buttons
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: ReminderPeriod.values.map((period) {
-                        return TimePeriodButton(
-                          label: period.label,
-                          isSelected: formState.selectedPeriod == period,
-                          onTap: () {
-                            ref
-                                .read(habitFormProvider.notifier)
-                                .selectPeriod(period);
-                          },
-                        );
-                      }).toList(),
+                    ReminderSelector(
+                      hasReminder: formState.hasReminder,
+                      reminderTime: formState.reminderTime,
+                      onReminderToggled: (enabled) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .setReminder(enabled);
+                      },
+                      onTimeSelected: (time) {
+                        ref
+                            .read(habitFormProvider.notifier)
+                            .setReminderTime(time);
+                      },
+                      onReminderRemoved: () {
+                        ref.read(habitFormProvider.notifier).clearReminder();
+                      },
                     ),
 
                     const SizedBox(height: 48),
 
-                    // Save Button
                     AppButton(
                       text: buttonText,
+                      isLoading: isLoading,
                       onPressed: _saveHabit,
                       variant: AppButtonVariant.primary,
                     ),
@@ -313,7 +402,6 @@ class _HabitFormState extends ConsumerState<HabitForm> {
             ),
           ],
         ),
-      ),
     );
   }
 }

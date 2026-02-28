@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
 import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
 import 'package:habitly/domain/usecases/get_habits_use_case.dart';
@@ -12,32 +14,23 @@ import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/use_case_providers.dart';
 
 class HabitListNotifier extends AsyncNotifier<List<Habit>> {
-  HabitListNotifier(this.userEmail);
-  final String userEmail;
-
-  late final AddHabitUseCase _addHabitUseCase;
-  late final GetHabitsUseCase _getHabitsUseCase;
-  late final UpdateHabitUseCase _updateHabitUseCase;
-  late final DeleteHabitUseCase _deleteHabitUseCase;
-  late final SetupOnboardingHabitsUseCase _setupOnboardingHabitsUseCase;
-  late final UpdateHabitsReminderUseCase _updateHabitsReminderUseCase;
-  late final ToggleHabitCompletionUseCase _toggleHabitCompletionUseCase;
+  AddHabitUseCase get _addHabitUseCase => ref.read(addHabitUseCaseProvider);
+  GetHabitsUseCase get _getHabitsUseCase => ref.read(getHabitsUseCaseProvider);
+  UpdateHabitUseCase get _updateHabitUseCase =>
+      ref.read(updateHabitUseCaseProvider);
+  DeleteHabitUseCase get _deleteHabitUseCase =>
+      ref.read(deleteHabitUseCaseProvider);
+  SetupOnboardingHabitsUseCase get _setupOnboardingHabitsUseCase =>
+      ref.read(setupOnboardingHabitsUseCaseProvider);
+  UpdateHabitsReminderUseCase get _updateHabitsReminderUseCase =>
+      ref.read(updateHabitsReminderUseCaseProvider);
+  ToggleHabitCompletionUseCase get _toggleHabitCompletionUseCase =>
+      ref.read(toggleHabitCompletionUseCaseProvider);
 
   @override
   Future<List<Habit>> build() async {
-    _addHabitUseCase = ref.read(addHabitUseCaseProvider(userEmail));
-    _getHabitsUseCase = ref.read(getHabitsUseCaseProvider(userEmail));
-    _updateHabitUseCase = ref.read(updateHabitUseCaseProvider(userEmail));
-    _deleteHabitUseCase = ref.read(deleteHabitUseCaseProvider(userEmail));
-    _setupOnboardingHabitsUseCase = ref.read(
-      setupOnboardingHabitsUseCaseProvider(userEmail),
-    );
-    _updateHabitsReminderUseCase = ref.read(
-      updateHabitsReminderUseCaseProvider(userEmail),
-    );
-    _toggleHabitCompletionUseCase = ref.read(
-      toggleHabitCompletionUseCaseProvider(userEmail),
-    );
+    final user = ref.watch(authProvider).asData?.value;
+    if (user == null) return [];
 
     try {
       return await _getHabitsUseCase();
@@ -50,16 +43,32 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
 
   Future<void> addHabit({
     required String name,
-    required int iconCodePoint,
+    required String iconName,
     required DateTime date,
-    required ReminderPeriod period,
+    bool hasReminder = false,
+    TimeOfDay? reminderTime,
+    String? categoryId,
+    HabitFrequency frequency = HabitFrequency.daily,
+    int? customDays,
+    DateTime? endDate,
   }) async {
+    String? reminderTimeString;
+    if (reminderTime != null) {
+      reminderTimeString = TimeUtils.formatForStorage(reminderTime);
+    }
+
+    state = const AsyncLoading<List<Habit>>();
     state = await AsyncValue.guard(() async {
       await _addHabitUseCase(
         name: name,
-        iconCodePoint: iconCodePoint,
+        iconName: iconName,
         targetDate: date,
-        reminderPeriod: period,
+        hasReminder: hasReminder,
+        reminderTime: reminderTimeString,
+        categoryId: categoryId,
+        frequency: frequency,
+        customDays: customDays,
+        endDate: endDate,
       );
       return _getHabitsUseCase();
     });
@@ -79,37 +88,74 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
     });
   }
 
-  Future<void> toggleCompletion(String habitId) async {
-    state = await AsyncValue.guard(() async {
-      await _toggleHabitCompletionUseCase(habitId);
-      return _getHabitsUseCase();
-    });
+  Future<void> toggleCompletion(String habitId, DateTime date) async {
+    final currentHabits = state.value;
+    if (currentHabits == null) return;
+
+    // save original habit for rollback
+    final originalHabit = currentHabits.firstWhere((h) => h.id == habitId);
+
+    // toggle completedDates locally
+    final dateKey = Habit.dateKey(date);
+    final updatedDates = Map<String, bool>.from(originalHabit.completedDates);
+    updatedDates[dateKey] = !(updatedDates[dateKey] ?? false);
+    final optimisticHabit = originalHabit.copyWith(
+      completedDates: updatedDates,
+    );
+
+    // update state directly (not passing through AsyncLoading)
+    state = AsyncData(
+      currentHabits.map((h) => h.id == habitId ? optimisticHabit : h).toList(),
+    );
+
+    // Firestore write in background
+    try {
+      await _toggleHabitCompletionUseCase(habitId, date);
+    } catch (e) {
+      // Rollback only failed habit
+      final current = state.value;
+      if (current != null) {
+        state = AsyncData(
+          current.map((h) => h.id == habitId ? originalHabit : h).toList(),
+        );
+      }
+      ref
+          .read(habitErrorProvider.notifier)
+          .setError('Failed to save changes. Please try again.');
+    }
   }
 
   Future<void> setupOnboardingHabits(
-    List<Map<String, dynamic>> selectedHabits,
+    List<OnboardingHabitData> selectedHabits,
   ) async {
+    state = const AsyncLoading<List<Habit>>();
     state = await AsyncValue.guard(() async {
       await _setupOnboardingHabitsUseCase(selectedHabits);
       return _getHabitsUseCase();
     });
   }
 
-  Future<void> updateHabitsReminder(ReminderPeriod period) async {
+  Future<void> updateHabitsReminder(String reminderTime) async {
     state = await AsyncValue.guard(() async {
-      await _updateHabitsReminderUseCase(period);
+      await _updateHabitsReminderUseCase(reminderTime);
       return _getHabitsUseCase();
     });
   }
 }
 
-final habitProvider =
-    AsyncNotifierProvider.family<HabitListNotifier, List<Habit>, String>(
-      (userEmail) => HabitListNotifier(userEmail),
-    );
+final habitProvider = AsyncNotifierProvider<HabitListNotifier, List<Habit>>(
+  HabitListNotifier.new,
+);
 
-final currentUserHabitsNotifierProvider = Provider<HabitListNotifier?>((ref) {
-  final email = ref.watch(currentUserEmailProvider);
-  if (email == null) return null;
-  return ref.read(habitProvider(email).notifier);
-});
+class HabitErrorNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setError(String? error) {
+    state = error;
+  }
+}
+
+final habitErrorProvider = NotifierProvider<HabitErrorNotifier, String?>(
+  HabitErrorNotifier.new,
+);

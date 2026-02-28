@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:habitly/firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
-import 'package:habitly/infrastructure/hive_adapters/habit_adapter.dart';
-import 'package:habitly/infrastructure/hive_adapters/theme_mode_adapter.dart';
-import 'package:habitly/infrastructure/hive_adapters/user_adapter.dart';
-import 'package:habitly/infrastructure/hive_constants.dart';
 import 'package:habitly/injection_container.dart' as di;
 import 'package:habitly/presentation/pages/add_habit_page.dart';
+import 'package:habitly/presentation/pages/category_selection_page.dart';
 import 'package:habitly/presentation/pages/edit_habit_page.dart';
 import 'package:habitly/presentation/pages/habit_selection_page.dart';
 import 'package:habitly/presentation/pages/home_page.dart';
@@ -18,25 +17,12 @@ import 'package:habitly/presentation/pages/reminder_time_page.dart';
 import 'package:habitly/presentation/pages/splash_screen.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/theme_provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habitly/core/constants/routes.dart';
 import 'package:sizer/sizer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-
-  Hive.registerAdapter(ThemeModeAdapter());
-  Hive.registerAdapter(UserAdapter());
-  Hive.registerAdapter(HabitAdapter());
-
-  try {
-    await Hive.openBox(HiveConstants.themeBox);
-    await Hive.openBox(HiveConstants.authBox);
-    await Hive.openBox(HiveConstants.habitBox);
-    await Hive.openBox(HiveConstants.registeredUsersBox);
-  } catch (e) {
-    debugPrint('Hive initialization error: $e');
-  }
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   di.init();
 
@@ -63,7 +49,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider).asData?.value ?? ThemeMode.system;
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
@@ -78,6 +64,9 @@ class MyApp extends ConsumerWidget {
           primary: AppColors.light.primary,
           surface: AppColors.light.surface,
           surfaceContainerLowest: AppColors.light.background,
+          tertiary: AppColors.light.primary,
+          tertiaryContainer: AppColors.light.primary,
+          onTertiaryContainer: Colors.white,
         ),
       ),
       darkTheme: ThemeData(
@@ -89,6 +78,9 @@ class MyApp extends ConsumerWidget {
           primary: AppColors.dark.primary,
           surface: AppColors.dark.surface,
           surfaceContainerLowest: AppColors.dark.background,
+          tertiary: AppColors.dark.primary,
+          tertiaryContainer: AppColors.dark.primary,
+          onTertiaryContainer: Colors.white,
         ),
       ),
       themeMode: themeMode,
@@ -99,15 +91,17 @@ class MyApp extends ConsumerWidget {
         error: (error, stack) => const LaunchPage(),
       ),
       routes: {
-        '/launch': (context) => const LaunchPage(),
-        '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/habit-selection': (context) => const HabitSelectionPage(),
-        '/reminder-time': (context) => const ReminderTimePage(),
-        '/onboarding-complete': (context) => const OnboardingCompletePage(),
-        '/home': (context) => const HomePage(),
-        '/add-habit': (context) => const AddHabitPage(),
-        '/edit-habit': (context) => const EditHabitPage(),
+        AppRoutes.launch: (context) => const LaunchPage(),
+        AppRoutes.login: (context) => const LoginPage(),
+        AppRoutes.register: (context) => const RegisterPage(),
+        AppRoutes.categorySelection: (context) => const CategorySelectionPage(),
+        AppRoutes.habitSelection: (context) => const HabitSelectionPage(),
+        AppRoutes.reminderTime: (context) => const ReminderTimePage(),
+        AppRoutes.onboardingComplete: (context) =>
+            const OnboardingCompletePage(),
+        AppRoutes.home: (context) => const HomePage(),
+        AppRoutes.addHabit: (context) => const AddHabitPage(),
+        AppRoutes.editHabit: (context) => const EditHabitPage(),
       },
     );
   }

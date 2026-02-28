@@ -3,14 +3,20 @@ import 'package:habitly/core/utils/validators.dart';
 
 class LoginFormState {
   final String email;
+  final String password;
 
-  const LoginFormState({this.email = ''});
+  const LoginFormState({this.email = '', this.password = ''});
 
-  bool get isValid => Validators.isValidEmail(email);
+  bool get isValid =>
+      Validators.isValidEmail(email) && Validators.isValidPassword(password);
   String? get emailError => Validators.validateEmail(email);
+  String? get passwordError => Validators.validatePassword(password);
 
-  LoginFormState copyWith({String? email}) {
-    return LoginFormState(email: email ?? this.email);
+  LoginFormState copyWith({String? email, String? password}) {
+    return LoginFormState(
+      email: email ?? this.email,
+      password: password ?? this.password,
+    );
   }
 }
 
@@ -22,11 +28,16 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
     state = state.copyWith(email: email.trim());
   }
 
+  void updatePassword(String password) {
+    state = state.copyWith(password: password);
+  }
+
   void reset() {
     state = const LoginFormState();
   }
 }
 
-final loginFormProvider = NotifierProvider<LoginFormNotifier, LoginFormState>(
-  LoginFormNotifier.new,
-);
+final loginFormProvider =
+    NotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>(
+      LoginFormNotifier.new,
+    );

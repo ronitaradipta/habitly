@@ -14,7 +14,7 @@ class InputLabel extends StatelessWidget {
     return Text.rich(
       TextSpan(
         text: label,
-        style: AppTextStyles.inputLabel(context, FontEngine.google),
+        style: AppTextStyles.inputLabel(context),
         children: [
           if (isRequired)
             TextSpan(

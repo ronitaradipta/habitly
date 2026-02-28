@@ -1,9 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
-import 'package:habitly/data/datasources/hive_data_source.dart';
-import 'package:habitly/data/datasources/local_data_source.dart';
-import 'package:habitly/data/repositories/habit_repository_impl.dart';
-import 'package:habitly/data/repositories/theme_repository_impl.dart';
-import 'package:habitly/data/repositories/user_repository_impl.dart';
+import 'package:habitly/data/datasources/auth_datasource.dart';
+import 'package:habitly/data/datasources/habit_datasource.dart';
+import 'package:habitly/data/datasources/theme_datasource.dart';
+import 'package:habitly/data/datasources/user_datasource.dart';
+import 'package:habitly/data/repositories/firebase_auth_repository.dart';
+import 'package:habitly/data/repositories/firestore_theme_repository.dart';
+import 'package:habitly/data/repositories/firestore_habit_repository.dart';
+import 'package:habitly/data/repositories/firestore_user_repository.dart';
+import 'package:habitly/domain/repositories/auth_repository.dart';
 import 'package:habitly/domain/repositories/habit_repository.dart';
 import 'package:habitly/domain/repositories/theme_repository.dart';
 import 'package:habitly/domain/repositories/user_repository.dart';
@@ -11,7 +17,6 @@ import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
 import 'package:habitly/domain/usecases/get_current_user_use_case.dart';
-import 'package:habitly/domain/usecases/get_habits_by_date_use_case.dart';
 import 'package:habitly/domain/usecases/get_habits_use_case.dart';
 import 'package:habitly/domain/usecases/get_theme_use_case.dart';
 import 'package:habitly/domain/usecases/login_use_case.dart';
@@ -27,75 +32,56 @@ import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
 final getIt = GetIt.instance;
 
 void init() {
-  // Data Sources
-  getIt.registerLazySingleton<LocalDataSource>(() => HiveDataSource());
+  // Firebase instances
+  getIt.registerLazySingleton(() => FirebaseAuth.instance);
+  getIt.registerLazySingleton(() => FirebaseFirestore.instance);
+
+  // Datasources
+  getIt.registerLazySingleton<AuthDatasource>(
+    () => FirebaseAuthDatasource(auth: getIt()),
+  );
+  getIt.registerLazySingleton<HabitDatasource>(
+    () => FirestoreHabitDatasource(firestore: getIt()),
+  );
+  getIt.registerLazySingleton<UserDatasource>(
+    () => FirestoreUserDatasource(firestore: getIt()),
+  );
+  getIt.registerLazySingleton<ThemeDatasource>(
+    () => FirestoreThemeDatasource(firestore: getIt()),
+  );
 
   // Repositories
+  getIt.registerLazySingleton<AuthRepository>(
+    () => FirebaseAuthRepository(datasource: getIt()),
+  );
   getIt.registerLazySingleton<UserRepository>(
-    () => UserRepositoryImpl(getIt()),
+    () => FirestoreUserRepository(datasource: getIt(), authDatasource: getIt()),
   );
   getIt.registerLazySingleton<ThemeRepository>(
-    () => ThemeRepositoryImpl(getIt()),
+    () => FirestoreThemeRepository(datasource: getIt(), authDatasource: getIt()),
+  );
+  getIt.registerLazySingleton<HabitRepository>(
+    () => FirestoreHabitRepository(datasource: getIt(), authDatasource: getIt()),
   );
 
-  // HabitRepository is user-scoped - cache instances per userEmail
-  final Map<String, HabitRepository> habitRepositoryCache = {};
-
-  HabitRepository getOrCreateHabitRepository(String userEmail) {
-    return habitRepositoryCache.putIfAbsent(
-      userEmail,
-      () => HabitRepositoryImpl(getIt(), userEmail),
-    );
-  }
-
-  getIt.registerFactoryParam<HabitRepository, String, void>(
-    (userEmail, _) => getOrCreateHabitRepository(userEmail),
-  );
-
-  // Use Cases (Auth - singleton)
+  // Use Cases - Auth
   getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
-  getIt.registerLazySingleton(() => LoginUseCase(getIt()));
-  getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
+  getIt.registerLazySingleton(() => LoginUseCase(getIt(), getIt()));
+  getIt.registerLazySingleton(() => RegisterUseCase(getIt(), getIt()));
   getIt.registerLazySingleton(() => LogoutUseCase(getIt()));
   getIt.registerLazySingleton(() => MarkOnboardingCompleteUseCase(getIt()));
   getIt.registerLazySingleton(() => CheckEmailRegisteredUseCase(getIt()));
 
-  // Use Cases (Theme - singleton)
+  // Use Cases - Theme
   getIt.registerLazySingleton(() => GetThemeUseCase(getIt()));
   getIt.registerLazySingleton(() => SaveThemeUseCase(getIt()));
 
-  // Use Cases (Habit - user-scoped, require userEmail parameter)
-  getIt.registerFactoryParam<AddHabitUseCase, String, void>(
-    (userEmail, _) =>
-        AddHabitUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<DeleteHabitUseCase, String, void>(
-    (userEmail, _) =>
-        DeleteHabitUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<GetHabitsUseCase, String, void>(
-    (userEmail, _) =>
-        GetHabitsUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<GetHabitsByDateUseCase, String, void>(
-    (userEmail, _) =>
-        GetHabitsByDateUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<UpdateHabitUseCase, String, void>(
-    (userEmail, _) =>
-        UpdateHabitUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<SetupOnboardingHabitsUseCase, String, void>(
-    (userEmail, _) =>
-        SetupOnboardingHabitsUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<UpdateHabitsReminderUseCase, String, void>(
-    (userEmail, _) =>
-        UpdateHabitsReminderUseCase(getIt<HabitRepository>(param1: userEmail)),
-  );
-  getIt.registerFactoryParam<ToggleHabitCompletionUseCase, String, void>(
-    (userEmail, _) => ToggleHabitCompletionUseCase(
-      getIt<HabitRepository>(param1: userEmail),
-    ),
-  );
+  // Use Cases - Habit
+  getIt.registerLazySingleton(() => AddHabitUseCase(getIt()));
+  getIt.registerLazySingleton(() => DeleteHabitUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetHabitsUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateHabitUseCase(getIt()));
+  getIt.registerLazySingleton(() => SetupOnboardingHabitsUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateHabitsReminderUseCase(getIt()));
+  getIt.registerLazySingleton(() => ToggleHabitCompletionUseCase(getIt()));
 }
