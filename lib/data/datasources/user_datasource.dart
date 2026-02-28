@@ -46,10 +46,7 @@ class FirestoreUserDatasource implements UserDatasource {
 
   @override
   Future<bool> isEmailRegistered(String email) async {
-    final snapshot = await _usersRef
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
-    return snapshot.docs.isNotEmpty;
+    final user = await getUserByEmail(email);
+    return user != null;
   }
 }

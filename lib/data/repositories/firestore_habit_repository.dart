@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:habitly/data/datasources/auth_datasource.dart';
 import 'package:habitly/data/datasources/habit_datasource.dart';
 import 'package:habitly/data/models/habit_model.dart';
 import 'package:habitly/domain/entities/habit.dart';
@@ -6,15 +6,15 @@ import 'package:habitly/domain/repositories/habit_repository.dart';
 
 class FirestoreHabitRepository implements HabitRepository {
   final HabitDatasource _datasource;
-  final FirebaseAuth _auth;
+  final AuthDatasource _authDatasource;
 
   FirestoreHabitRepository({
     required HabitDatasource datasource,
-    FirebaseAuth? auth,
+    required AuthDatasource authDatasource,
   }) : _datasource = datasource,
-       _auth = auth ?? FirebaseAuth.instance;
+       _authDatasource = authDatasource;
 
-  String? get _uid => _auth.currentUser?.uid;
+  String? get _uid => _authDatasource.currentUserId;
 
   @override
   Future<List<Habit>> getHabits() async {
@@ -22,15 +22,6 @@ class FirestoreHabitRepository implements HabitRepository {
     if (uid == null) return [];
 
     final models = await _datasource.getHabits(uid);
-    return models.map((model) => model.toEntity()).toList();
-  }
-
-  @override
-  Future<List<Habit>> getHabitsByDate(DateTime date) async {
-    final uid = _uid;
-    if (uid == null) return [];
-
-    final models = await _datasource.getHabitsByDate(uid, date);
     return models.map((model) => model.toEntity()).toList();
   }
 

@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:habitly/data/datasources/auth_datasource.dart';
 import 'package:habitly/data/datasources/user_datasource.dart';
 import 'package:habitly/data/models/user_model.dart';
 import 'package:habitly/domain/entities/user.dart';
@@ -6,15 +6,15 @@ import 'package:habitly/domain/repositories/user_repository.dart';
 
 class FirestoreUserRepository implements UserRepository {
   final UserDatasource _datasource;
-  final firebase_auth.FirebaseAuth _auth;
+  final AuthDatasource _authDatasource;
 
   FirestoreUserRepository({
     required UserDatasource datasource,
-    firebase_auth.FirebaseAuth? auth,
+    required AuthDatasource authDatasource,
   }) : _datasource = datasource,
-       _auth = auth ?? firebase_auth.FirebaseAuth.instance;
+       _authDatasource = authDatasource;
 
-  String? get _uid => _auth.currentUser?.uid;
+  String? get _uid => _authDatasource.currentUserId;
 
   @override
   Future<User?> getCurrentUser() async {
@@ -22,12 +22,6 @@ class FirestoreUserRepository implements UserRepository {
     if (uid == null) return null;
 
     final model = await _datasource.getCurrentUser(uid);
-    return model?.toEntity();
-  }
-
-  @override
-  Future<User?> getRegisteredUser(String email) async {
-    final model = await _datasource.getUserByEmail(email);
     return model?.toEntity();
   }
 

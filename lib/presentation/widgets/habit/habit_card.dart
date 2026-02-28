@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:habitly/core/theme/app_colors.dart';
+import 'package:habitly/presentation/theme/icon_mapper.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/presentation/widgets/shared/selectable_card.dart';
 
 class HabitCard extends StatelessWidget {
   final String id;
   final String name;
-  final int iconCodePoint;
+  final String iconName;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -13,7 +15,7 @@ class HabitCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.name,
-    required this.iconCodePoint,
+    required this.iconName,
     required this.isSelected,
     required this.onTap,
   });
@@ -21,42 +23,27 @@ class HabitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return GestureDetector(
+    return SelectableCard(
+      isSelected: isSelected,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: isSelected
-              ? Border.all(color: colors.primary, width: 2)
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              IconData(iconCodePoint, fontFamily: 'MaterialIcons'),
-              size: 48,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            IconMapper.toIconData(iconName),
+            size: 48,
+            color: isSelected ? colors.primary : colors.textPrimary,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            style: AppTextStyles.body(context).copyWith(
+              fontWeight: FontWeight.w500,
               color: isSelected ? colors.primary : colors.textPrimary,
             ),
-            const SizedBox(height: 8),
-            Text(
-              name,
-              style: AppTextStyles.body(context).copyWith(
-                fontWeight: FontWeight.w500,
-                color: isSelected ? colors.primary : colors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

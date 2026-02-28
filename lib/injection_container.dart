@@ -17,7 +17,6 @@ import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
 import 'package:habitly/domain/usecases/get_current_user_use_case.dart';
-import 'package:habitly/domain/usecases/get_habits_by_date_use_case.dart';
 import 'package:habitly/domain/usecases/get_habits_use_case.dart';
 import 'package:habitly/domain/usecases/get_theme_use_case.dart';
 import 'package:habitly/domain/usecases/login_use_case.dart';
@@ -56,17 +55,17 @@ void init() {
     () => FirebaseAuthRepository(datasource: getIt()),
   );
   getIt.registerLazySingleton<UserRepository>(
-    () => FirestoreUserRepository(datasource: getIt(), auth: getIt()),
+    () => FirestoreUserRepository(datasource: getIt(), authDatasource: getIt()),
   );
   getIt.registerLazySingleton<ThemeRepository>(
-    () => FirestoreThemeRepository(datasource: getIt(), auth: getIt()),
+    () => FirestoreThemeRepository(datasource: getIt(), authDatasource: getIt()),
   );
   getIt.registerLazySingleton<HabitRepository>(
-    () => FirestoreHabitRepository(datasource: getIt(), auth: getIt()),
+    () => FirestoreHabitRepository(datasource: getIt(), authDatasource: getIt()),
   );
 
   // Use Cases - Auth
-  getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt(), getIt()));
+  getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
   getIt.registerLazySingleton(() => LoginUseCase(getIt(), getIt()));
   getIt.registerLazySingleton(() => RegisterUseCase(getIt(), getIt()));
   getIt.registerLazySingleton(() => LogoutUseCase(getIt()));
@@ -81,7 +80,6 @@ void init() {
   getIt.registerLazySingleton(() => AddHabitUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteHabitUseCase(getIt()));
   getIt.registerLazySingleton(() => GetHabitsUseCase(getIt()));
-  getIt.registerLazySingleton(() => GetHabitsByDateUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateHabitUseCase(getIt()));
   getIt.registerLazySingleton(() => SetupOnboardingHabitsUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateHabitsReminderUseCase(getIt()));
