@@ -27,7 +27,9 @@ import 'package:habitly/domain/usecases/save_theme_use_case.dart';
 import 'package:habitly/domain/usecases/setup_onboarding_habits_use_case.dart';
 import 'package:habitly/domain/usecases/toggle_habit_completion_use_case.dart';
 import 'package:habitly/domain/usecases/update_habit_use_case.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
+import 'package:habitly/core/services/local_notification_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -50,6 +52,12 @@ void init() {
     () => FirestoreThemeDatasource(firestore: getIt()),
   );
 
+  // Plugins
+  getIt.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+
+  // Services
+  getIt.registerLazySingleton(() => LocalNotificationService(plugin: getIt()));
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => FirebaseAuthRepository(datasource: getIt()),
@@ -58,10 +66,12 @@ void init() {
     () => FirestoreUserRepository(datasource: getIt(), authDatasource: getIt()),
   );
   getIt.registerLazySingleton<ThemeRepository>(
-    () => FirestoreThemeRepository(datasource: getIt(), authDatasource: getIt()),
+    () =>
+        FirestoreThemeRepository(datasource: getIt(), authDatasource: getIt()),
   );
   getIt.registerLazySingleton<HabitRepository>(
-    () => FirestoreHabitRepository(datasource: getIt(), authDatasource: getIt()),
+    () =>
+        FirestoreHabitRepository(datasource: getIt(), authDatasource: getIt()),
   );
 
   // Use Cases - Auth

@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:habitly/firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
+import 'package:habitly/core/services/local_notification_service.dart';
 import 'package:habitly/injection_container.dart' as di;
 import 'package:habitly/presentation/pages/add_habit_page.dart';
 import 'package:habitly/presentation/pages/category_selection_page.dart';
@@ -25,6 +26,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   di.init();
+  await di.getIt<LocalNotificationService>().init();
 
   runApp(const Root());
 }
@@ -49,7 +51,8 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider).asData?.value ?? ThemeMode.system;
+    final themeMode =
+        ref.watch(themeProvider).asData?.value ?? ThemeMode.system;
     final authState = ref.watch(authProvider);
 
     return MaterialApp(

@@ -11,6 +11,7 @@ import 'package:habitly/domain/usecases/toggle_habit_completion_use_case.dart';
 import 'package:habitly/domain/usecases/update_habit_use_case.dart';
 import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
+import 'package:habitly/presentation/providers/local_notification_provider.dart';
 import 'package:habitly/presentation/providers/use_case_providers.dart';
 
 class HabitListNotifier extends AsyncNotifier<List<Habit>> {
@@ -26,14 +27,23 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
       ref.read(updateHabitsReminderUseCaseProvider);
   ToggleHabitCompletionUseCase get _toggleHabitCompletionUseCase =>
       ref.read(toggleHabitCompletionUseCaseProvider);
+  Future<void> _syncLocalReminders(List<Habit> habits) =>
+      ref.read(localNotificationServiceProvider).syncHabitReminders(habits);
+  Future<void> _clearLocalReminders() =>
+      ref.read(localNotificationServiceProvider).cancelAll();
 
   @override
   Future<List<Habit>> build() async {
     final user = ref.watch(authProvider).asData?.value;
-    if (user == null) return [];
+    if (user == null) {
+      await _clearLocalReminders();
+      return [];
+    }
 
     try {
-      return await _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     } catch (e, st) {
       debugPrint('Error loading habits: $e');
       state = AsyncValue.error(e, st);
@@ -70,21 +80,27 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
         customDays: customDays,
         endDate: endDate,
       );
-      return _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     });
   }
 
   Future<void> updateHabit(Habit updatedHabit) async {
     state = await AsyncValue.guard(() async {
       await _updateHabitUseCase(updatedHabit);
-      return _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     });
   }
 
   Future<void> deleteHabit(String habitId) async {
     state = await AsyncValue.guard(() async {
       await _deleteHabitUseCase(habitId);
-      return _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     });
   }
 
@@ -131,14 +147,18 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
     state = const AsyncLoading<List<Habit>>();
     state = await AsyncValue.guard(() async {
       await _setupOnboardingHabitsUseCase(selectedHabits);
-      return _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     });
   }
 
   Future<void> updateHabitsReminder(String reminderTime) async {
     state = await AsyncValue.guard(() async {
       await _updateHabitsReminderUseCase(reminderTime);
-      return _getHabitsUseCase();
+      final habits = await _getHabitsUseCase();
+      await _syncLocalReminders(habits);
+      return habits;
     });
   }
 }
