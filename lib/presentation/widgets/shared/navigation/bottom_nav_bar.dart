@@ -10,15 +10,17 @@ class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key, required this.currentItem});
 
   void _handleTap(BuildContext context, BottomNavItem item) {
+    if (item == currentItem) return;
+
     switch (item) {
       case BottomNavItem.home:
-        // Already on home
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
         break;
       case BottomNavItem.add:
         Navigator.pushNamed(context, AppRoutes.addHabit);
         break;
       case BottomNavItem.profile:
-        // Navigate to profile, placeholder for now
+        Navigator.pushReplacementNamed(context, AppRoutes.profile);
         break;
     }
   }
@@ -67,7 +69,7 @@ class BottomNavBar extends StatelessWidget {
             child: Icon(
               currentItem == BottomNavItem.profile
                   ? Icons.person
-                  : Icons.person_outline,
+                  : Icons.person_outlined,
               size: 28,
               color: currentItem == BottomNavItem.profile
                   ? colors.textPrimary

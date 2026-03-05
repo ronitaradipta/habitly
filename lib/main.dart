@@ -6,6 +6,7 @@ import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/services/local_notification_service.dart';
 import 'package:habitly/injection_container.dart' as di;
 import 'package:habitly/presentation/pages/add_habit_page.dart';
+import 'package:habitly/presentation/pages/analytics_page.dart';
 import 'package:habitly/presentation/pages/category_selection_page.dart';
 import 'package:habitly/presentation/pages/edit_habit_page.dart';
 import 'package:habitly/presentation/pages/habit_selection_page.dart';
@@ -13,6 +14,7 @@ import 'package:habitly/presentation/pages/home_page.dart';
 import 'package:habitly/presentation/pages/launch_page.dart';
 import 'package:habitly/presentation/pages/login_page.dart';
 import 'package:habitly/presentation/pages/onboarding_complete_page.dart';
+import 'package:habitly/presentation/pages/profile_menu_page.dart';
 import 'package:habitly/presentation/pages/register_page.dart';
 import 'package:habitly/presentation/pages/reminder_time_page.dart';
 import 'package:habitly/presentation/pages/splash_screen.dart';
@@ -103,8 +105,10 @@ class MyApp extends ConsumerWidget {
         AppRoutes.onboardingComplete: (context) =>
             const OnboardingCompletePage(),
         AppRoutes.home: (context) => const HomePage(),
+        AppRoutes.analytics: (context) => const AnalyticsPage(),
         AppRoutes.addHabit: (context) => const AddHabitPage(),
         AppRoutes.editHabit: (context) => const EditHabitPage(),
+        AppRoutes.profile: (context) => const ProfileMenuPage(),
       },
     );
   }

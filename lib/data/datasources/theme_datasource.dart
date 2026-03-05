@@ -32,9 +32,8 @@ class FirestoreThemeDatasource implements ThemeDatasource {
 
   @override
   Future<void> saveTheme(String uid, String themeModeName) async {
-    await _settingsDoc(uid).set(
-      {'themeMode': themeModeName},
-      SetOptions(merge: true),
-    );
+    await _settingsDoc(
+      uid,
+    ).set({'themeMode': themeModeName}, SetOptions(merge: true));
   }
 }

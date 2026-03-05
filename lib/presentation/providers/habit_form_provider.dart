@@ -12,6 +12,7 @@ class Nullable<T> {
 }
 
 class HabitFormState {
+  final String? name;
   final DateTime? selectedDate;
   final HabitFrequency? selectedFrequency;
   final int? customDays;
@@ -28,6 +29,7 @@ class HabitFormState {
   final bool isSaving;
 
   const HabitFormState({
+    this.name,
     this.selectedDate,
     this.selectedFrequency,
     this.customDays,
@@ -39,6 +41,7 @@ class HabitFormState {
   });
 
   HabitFormState copyWith({
+    String? name,
     DateTime? selectedDate,
     HabitFrequency? selectedFrequency,
     int? customDays,
@@ -49,6 +52,7 @@ class HabitFormState {
     bool? isSaving,
   }) {
     return HabitFormState(
+      name: name ?? this.name,
       selectedDate: selectedDate ?? this.selectedDate,
       selectedFrequency: selectedFrequency ?? this.selectedFrequency,
       customDays: customDays ?? this.customDays,
@@ -66,8 +70,29 @@ class HabitFormState {
 }
 
 class HabitFormNotifier extends Notifier<HabitFormState> {
+  final Habit? _initialHabit;
+
+  HabitFormNotifier([this._initialHabit]);
+
   @override
-  HabitFormState build() => const HabitFormState();
+  HabitFormState build() {
+    final habit = _initialHabit;
+    if (habit != null) {
+      return HabitFormState(
+        name: habit.name,
+        selectedDate: habit.targetDate,
+        selectedFrequency: habit.frequency,
+        customDays: habit.customDays,
+        endDate: habit.endDate,
+        hasReminder: habit.hasReminder,
+        reminderTime: habit.reminderTime != null
+            ? TimeUtils.parse(habit.reminderTime!)
+            : null,
+        selectedCategory: habit.category,
+      );
+    }
+    return const HabitFormState();
+  }
 
   void selectDate(DateTime date) {
     state = state.copyWith(selectedDate: date);
@@ -110,18 +135,8 @@ class HabitFormNotifier extends Notifier<HabitFormState> {
     state = state.copyWith(selectedCategory: const Nullable(null));
   }
 
-  void initFromHabit(Habit habit) {
-    state = HabitFormState(
-      selectedDate: habit.targetDate,
-      selectedFrequency: habit.frequency,
-      customDays: habit.customDays,
-      endDate: habit.endDate,
-      hasReminder: habit.hasReminder,
-      reminderTime: habit.reminderTime != null
-          ? TimeUtils.parse(habit.reminderTime!)
-          : null,
-      selectedCategory: habit.category,
-    );
+  void updateName(String name) {
+    state = state.copyWith(name: name);
   }
 
   void setSaving(bool saving) {

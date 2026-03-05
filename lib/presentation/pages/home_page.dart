@@ -10,7 +10,6 @@ import 'package:habitly/presentation/widgets/habit/week_day_selector.dart';
 import 'package:habitly/presentation/widgets/habit/habit_progress_indicator.dart';
 import 'package:habitly/presentation/widgets/habit/category_filter_bar.dart';
 import 'package:habitly/presentation/widgets/habit/custom_calendar.dart';
-import 'package:habitly/presentation/widgets/shared/navigation/sidebar_drawer.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
@@ -49,7 +48,6 @@ class HomePage extends ConsumerWidget {
 
     return ThemeScaffold(
       showThemeButton: false,
-      drawer: const SidebarDrawer(),
       body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -59,24 +57,10 @@ class HomePage extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Hamburger menu button
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Builder(
-                        builder: (context) => IconButton(
-                          icon: Icon(Icons.menu, color: colors.textPrimary),
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                          tooltip: 'Menu',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Date label
-                      Text(
-                        AppDateUtils.formatDateLabel(selectedDate),
-                        style: AppTextStyles.headingMedium(context),
-                      ),
-                    ],
+                  // Date label
+                  Text(
+                    AppDateUtils.formatDateLabel(selectedDate),
+                    style: AppTextStyles.headingMedium(context),
                   ),
 
                   // Calendar and theme toggle

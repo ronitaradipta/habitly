@@ -7,6 +7,19 @@ import 'package:habitly/domain/entities/habit_frequency.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
 import 'package:sizer/sizer.dart';
 
+final _customDaysControllerProvider =
+    Provider.autoDispose<TextEditingController>((ref) {
+  final controller = TextEditingController(
+    text: (ref.read(habitFormProvider).customDays ?? 2).toString(),
+  );
+  ref.onDispose(controller.dispose);
+  ref.listen(habitFormProvider.select((s) => s.customDays), (_, next) {
+    final newText = (next ?? 2).toString();
+    if (controller.text != newText) controller.text = newText;
+  });
+  return controller;
+});
+
 class FrequencySelector extends ConsumerWidget {
   const FrequencySelector({super.key});
 
@@ -101,49 +114,22 @@ class _FrequencyListItem extends ConsumerWidget {
   }
 }
 
-class _CustomDaysInput extends ConsumerStatefulWidget {
+class _CustomDaysInput extends ConsumerWidget {
   const _CustomDaysInput();
 
   @override
-  ConsumerState<_CustomDaysInput> createState() => _CustomDaysInputState();
-}
-
-class _CustomDaysInputState extends ConsumerState<_CustomDaysInput> {
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(
-      text: (ref.read(habitFormProvider).customDays ?? 2).toString(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _updateCustomDays(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed != null && parsed >= 1 && parsed <= 365) {
-      ref.read(habitFormProvider.notifier).setCustomDays(parsed);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
     final customDays =
         ref.watch(habitFormProvider.select((s) => s.customDays ?? 2));
+    final controller = ref.watch(_customDaysControllerProvider);
 
-    ref.listen(habitFormProvider.select((s) => s.customDays), (prev, next) {
-      final newText = (next ?? 2).toString();
-      if (_controller.text != newText) {
-        _controller.text = newText;
+    void updateCustomDays(String value) {
+      final parsed = int.tryParse(value);
+      if (parsed != null && parsed >= 1 && parsed <= 365) {
+        ref.read(habitFormProvider.notifier).setCustomDays(parsed);
       }
-    });
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -161,15 +147,15 @@ class _CustomDaysInputState extends ConsumerState<_CustomDaysInput> {
             icon: Icons.remove,
             isEnabled: customDays > 1,
             onTap: () {
-              final newValue = customDays - 1;
-              _controller.text = newValue.toString();
-              ref.read(habitFormProvider.notifier).setCustomDays(newValue);
+              ref
+                  .read(habitFormProvider.notifier)
+                  .setCustomDays(customDays - 1);
             },
           ),
 
           Expanded(
             child: TextField(
-              controller: _controller,
+              controller: controller,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: AppTextStyles.heading(context).copyWith(
@@ -189,7 +175,7 @@ class _CustomDaysInputState extends ConsumerState<_CustomDaysInput> {
                   color: colors.textSecondary.withValues(alpha: 0.5),
                 ),
               ),
-              onChanged: _updateCustomDays,
+              onChanged: updateCustomDays,
             ),
           ),
 
@@ -197,9 +183,9 @@ class _CustomDaysInputState extends ConsumerState<_CustomDaysInput> {
             icon: Icons.add,
             isEnabled: customDays < 365,
             onTap: () {
-              final newValue = customDays + 1;
-              _controller.text = newValue.toString();
-              ref.read(habitFormProvider.notifier).setCustomDays(newValue);
+              ref
+                  .read(habitFormProvider.notifier)
+                  .setCustomDays(customDays + 1);
             },
           ),
         ],

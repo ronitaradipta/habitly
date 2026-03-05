@@ -8,6 +8,7 @@ enum AppTextFieldBorderStyle { outlined, underline }
 
 class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
+  final String? initialValue;
   final String? hintText;
   final TextInputType keyboardType;
   final bool obscureText;
@@ -26,6 +27,7 @@ class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
     this.controller,
+    this.initialValue,
     this.hintText,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
@@ -68,6 +70,7 @@ class AppTextField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      initialValue: controller == null ? initialValue : null,
       keyboardType: keyboardType,
       obscureText: obscureText,
       validator: validator,

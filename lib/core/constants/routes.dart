@@ -9,6 +9,8 @@ class AppRoutes {
   static const reminderTime = '/reminder-time';
   static const onboardingComplete = '/onboarding-complete';
   static const home = '/home';
+  static const analytics = '/analytics';
   static const addHabit = '/add-habit';
   static const editHabit = '/edit-habit';
+  static const profile = '/profile';
 }
