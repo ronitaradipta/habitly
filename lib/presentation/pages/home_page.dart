@@ -16,7 +16,9 @@ import 'package:habitly/presentation/providers/paginated_habits_provider.dart';
 import 'package:habitly/presentation/widgets/habit/habit_sort_button.dart';
 import 'package:habitly/presentation/providers/selected_date_provider.dart';
 import 'package:habitly/core/theme/app_colors.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/core/theme/text_style.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 import 'package:sizer/sizer.dart';
 
 class HomePage extends ConsumerWidget {
@@ -32,9 +34,7 @@ class HomePage extends ConsumerWidget {
 
     ref.listen<String?>(habitErrorProvider, (previous, next) {
       if (next != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next), behavior: SnackBarBehavior.floating),
-        );
+        AppSnackBar.showError(context, next);
         ref.read(habitErrorProvider.notifier).setError(null);
       }
     });
@@ -103,7 +103,7 @@ class HomePage extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Progress Indicator
-          HabitProgressIndicator(),
+          const HabitProgressIndicator(),
 
           const SizedBox(height: 24),
 
@@ -146,7 +146,8 @@ class HomePage extends ConsumerWidget {
                 return NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
                     if (notification.metrics.pixels >=
-                        notification.metrics.maxScrollExtent - 200) {
+                        notification.metrics.maxScrollExtent -
+                            AppPagination.scrollLoadThreshold) {
                       ref
                           .read(paginatedHabitsProvider.notifier)
                           .loadMore();
@@ -174,7 +175,7 @@ class HomePage extends ConsumerWidget {
           ),
 
           // Bottom Navigation Bar
-          BottomNavBar(currentItem: BottomNavItem.home),
+          const BottomNavBar(currentItem: BottomNavItem.home),
         ],
       ),
     );

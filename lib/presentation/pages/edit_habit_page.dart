@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
-import 'package:habitly/presentation/widgets/habit/habit_form.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
+import 'package:habitly/presentation/widgets/habit/habit_form.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 
 class EditHabitPage extends ConsumerWidget {
@@ -11,9 +12,7 @@ class EditHabitPage extends ConsumerWidget {
   void _navigateBackWithError(BuildContext context, String message) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Navigator.canPop(context)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        AppSnackBar.showError(context, message);
         Navigator.pop(context);
       }
     });

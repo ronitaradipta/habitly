@@ -1,20 +1,18 @@
+import 'package:habitly/core/utils/date_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
-
-DateTime _toDateOnly(DateTime date) =>
-    DateTime(date.year, date.month, date.day);
 
 bool isHabitScheduledOnDate(Habit habit, DateTime date) {
   final startDate = habit.targetDate;
   if (startDate == null) return false;
 
-  final start = _toDateOnly(startDate);
-  final selected = _toDateOnly(date);
+  final start = AppDateUtils.toDateOnly(startDate);
+  final selected = AppDateUtils.toDateOnly(date);
 
   if (selected.isBefore(start)) return false;
 
   if (habit.endDate != null) {
-    final end = _toDateOnly(habit.endDate!);
+    final end = AppDateUtils.toDateOnly(habit.endDate!);
     if (selected.isAfter(end)) return false;
   }
 

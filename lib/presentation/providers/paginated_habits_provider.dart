@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/paginated_list.dart';
 import 'package:habitly/presentation/providers/sorted_habits_provider.dart';
-
-const _pageSize = 15;
 
 final paginatedHabitsProvider = NotifierProvider<PaginatedHabitsNotifier,
     AsyncValue<PaginatedList<Habit>>>(PaginatedHabitsNotifier.new);
@@ -31,7 +30,7 @@ class PaginatedHabitsNotifier
   }
 
   PaginatedList<Habit> _paginate(List<Habit> allHabits, int page) {
-    final end = (page + 1) * _pageSize;
+    final end = (page + 1) * AppPagination.defaultPageSize;
     final visibleCount = end.clamp(0, allHabits.length);
     return PaginatedList(
       items: allHabits.sublist(0, visibleCount),

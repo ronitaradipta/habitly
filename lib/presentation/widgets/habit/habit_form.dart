@@ -13,6 +13,7 @@ import 'package:habitly/presentation/widgets/habit/ai_habit_generator_tab.dart';
 import 'package:habitly/presentation/widgets/habit/category_selector.dart';
 import 'package:habitly/presentation/widgets/shared/required_badge.dart';
 import 'package:habitly/presentation/providers/habit_form_provider.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
@@ -220,20 +221,20 @@ class _HabitFormFields extends ConsumerWidget {
       if (next.saveResult != previous?.saveResult) {
         switch (next.saveResult) {
           case SaveResult.created:
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Habit added successfully!')),
-            );
+            AppSnackBar.showSuccess(context, 'Habit added successfully!');
             Navigator.pop(context);
           case SaveResult.updated:
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Habit updated successfully!')),
-            );
+            AppSnackBar.showSuccess(context, 'Habit updated successfully!');
             Navigator.pop(context);
           case SaveResult.validationError:
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(next.validationError ?? 'Validation failed'),
-              ),
+            AppSnackBar.showError(
+              context,
+              next.validationError ?? 'Validation failed',
+            );
+          case SaveResult.saveError:
+            AppSnackBar.showError(
+              context,
+              next.validationError ?? 'Failed to save habit',
             );
           case SaveResult.none:
             break;

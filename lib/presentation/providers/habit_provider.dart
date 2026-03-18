@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
@@ -126,7 +129,8 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
 
     // Firestore write in background
     try {
-      await _toggleHabitCompletionUseCase(habitId, date);
+      await _toggleHabitCompletionUseCase(habitId, date)
+          .timeout(AppTimeouts.habitToggle);
     } catch (e) {
       // Rollback only failed habit
       final current = state.value;
@@ -137,7 +141,7 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
       }
       ref
           .read(habitErrorProvider.notifier)
-          .setError('Failed to save changes. Please try again.');
+          .setError(AppErrorMessages.saveFailed);
     }
   }
 

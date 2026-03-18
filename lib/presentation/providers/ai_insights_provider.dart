@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/domain/entities/ai_insight.dart';
+import 'package:habitly/domain/entities/analytics_range.dart';
+import 'package:habitly/domain/entities/analytics_summary.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/usecases/generate_ai_insights_use_case.dart';
 import 'package:habitly/presentation/providers/analytics_provider.dart';

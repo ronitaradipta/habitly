@@ -47,7 +47,7 @@ class AppPhoneField extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                "+62",
+                '+62',
                 style: AppTextStyles.body(context),
               ),
             ],

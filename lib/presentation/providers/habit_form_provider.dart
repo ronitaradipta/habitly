@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/core/utils/habit_validators.dart';
 import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/category.dart';
@@ -9,7 +12,7 @@ import 'package:habitly/presentation/providers/habit_provider.dart';
 
 enum FormMode { create, edit }
 
-enum SaveResult { none, created, updated, validationError }
+enum SaveResult { none, created, updated, validationError, saveError }
 
 // Wrapper to differentiate "not passed" vs "intentionally set to null"
 class Nullable<T> {
@@ -85,6 +88,11 @@ class HabitFormState {
   }
 }
 
+/// Manages habit form state for create/edit flows.
+///
+/// Uses constructor injection so [HabitForm] can provide the initial
+/// habit via [ProviderScope.overrides]. This scopes form state per-instance
+/// without requiring a family provider.
 class HabitFormNotifier extends Notifier<HabitFormState> {
   final Habit? _initialHabit;
 
@@ -208,7 +216,7 @@ class HabitFormNotifier extends Notifier<HabitFormState> {
           frequency: state.selectedFrequency ?? HabitFrequency.daily,
           customDays: state.customDays,
           endDate: state.endDate,
-        );
+        ).timeout(AppTimeouts.habitWrite);
 
         state = state.copyWith(isSaving: false, saveResult: SaveResult.created);
       } else {
@@ -227,12 +235,19 @@ class HabitFormNotifier extends Notifier<HabitFormState> {
           endDate: state.endDate,
         );
 
-        await notifier.updateHabit(updatedHabit);
+        await notifier.updateHabit(updatedHabit).timeout(AppTimeouts.habitWrite);
 
         state = state.copyWith(isSaving: false, saveResult: SaveResult.updated);
       }
-    } catch (_) {
-      state = state.copyWith(isSaving: false);
+    } catch (e) {
+      final message = e is TimeoutException
+          ? AppErrorMessages.timeout
+          : AppErrorMessages.saveFailed;
+      state = state.copyWith(
+        isSaving: false,
+        saveResult: SaveResult.saveError,
+        validationError: Nullable(message),
+      );
     }
   }
 }

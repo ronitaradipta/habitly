@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
 import 'package:habitly/domain/entities/suggested_habit.dart';
 import 'package:habitly/domain/usecases/generate_habits_use_case.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/presentation/providers/use_case_providers.dart';
 
@@ -53,21 +56,30 @@ class AiHabitGeneratorNotifier extends Notifier<AiHabitGeneratorState> {
 
     final habits = ref.read(habitProvider).value ?? <Habit>[];
 
-    final results = await _useCase(
-      userGoals: goals,
-      existingHabits: habits,
-    );
+    try {
+      final results = await _useCase(
+        userGoals: goals,
+        existingHabits: habits,
+      ).timeout(AppTimeouts.aiGeneration);
 
-    if (results.isEmpty) {
+      if (results.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: AppErrorMessages.generateFailed,
+        );
+      } else {
+        state = state.copyWith(
+          suggestions: results,
+          selectedIndices: {},
+          isLoading: false,
+        );
+      }
+    } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Could not generate habits. Please try again.',
-      );
-    } else {
-      state = state.copyWith(
-        suggestions: results,
-        selectedIndices: {},
-        isLoading: false,
+        error: e is TimeoutException
+            ? AppErrorMessages.timeout
+            : AppErrorMessages.generateFailed,
       );
     }
   }
@@ -88,25 +100,34 @@ class AiHabitGeneratorNotifier extends Notifier<AiHabitGeneratorState> {
     final notifier = ref.read(habitProvider.notifier);
     final now = DateTime.now();
 
-    for (final index in state.selectedIndices) {
-      final suggestion = state.suggestions[index];
-      final freq = HabitFrequency.fromName(suggestion.frequency);
+    try {
+      final futures = state.selectedIndices.map((index) {
+        final suggestion = state.suggestions[index];
+        final freq = HabitFrequency.fromName(suggestion.frequency);
+        return notifier.addHabit(
+          name: suggestion.name,
+          iconName: suggestion.iconName,
+          date: now,
+          categoryId: suggestion.categoryId,
+          frequency: freq,
+        ).timeout(AppTimeouts.habitWrite);
+      });
+      await Future.wait(futures);
 
-      await notifier.addHabit(
-        name: suggestion.name,
-        iconName: suggestion.iconName,
-        date: now,
-        categoryId: suggestion.categoryId,
-        frequency: freq,
+      state = state.copyWith(
+        suggestions: [],
+        selectedIndices: {},
+        isAdding: false,
+        addedCount: state.selectedIndices.length,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isAdding: false,
+        error: e is TimeoutException
+            ? AppErrorMessages.timeout
+            : AppErrorMessages.saveFailed,
       );
     }
-
-    state = state.copyWith(
-      suggestions: [],
-      selectedIndices: {},
-      isAdding: false,
-      addedCount: state.selectedIndices.length,
-    );
   }
 
   void reset() {

@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
-import 'package:habitly/presentation/providers/analytics_provider.dart';
+import 'package:habitly/domain/entities/daily_analytics_point.dart';
 import 'package:intl/intl.dart';
 
 class CompletionRateChart extends StatelessWidget {

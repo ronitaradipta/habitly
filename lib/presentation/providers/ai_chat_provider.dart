@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/domain/entities/chat_message.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/usecases/send_chat_message_use_case.dart';
@@ -43,24 +47,41 @@ class AiChatNotifier extends Notifier<AiChatState> {
       isLoading: true,
     );
 
-    final habits = ref.read(habitProvider).value ?? <Habit>[];
+    try {
+      final habits = ref.read(habitProvider).value ?? <Habit>[];
 
-    final response = await _useCase(
-      message: text,
-      history: state.messages,
-      habits: habits,
-    );
+      final response = await _useCase(
+        message: text,
+        history: state.messages,
+        habits: habits,
+      );
 
-    final assistantMessage = ChatMessage(
-      role: 'assistant',
-      content: response,
-      timestamp: DateTime.now(),
-    );
+      final assistantMessage = ChatMessage(
+        role: 'assistant',
+        content: response,
+        timestamp: DateTime.now(),
+      );
 
-    state = state.copyWith(
-      messages: [...state.messages, assistantMessage],
-      isLoading: false,
-    );
+      state = state.copyWith(
+        messages: [...state.messages, assistantMessage],
+        isLoading: false,
+      );
+    } catch (e) {
+      debugPrint('AiChatNotifier.sendMessage failed: $e');
+      final errorText = e is TimeoutException
+          ? AppErrorMessages.timeout
+          : AppErrorMessages.genericError;
+      final errorMessage = ChatMessage(
+        role: 'assistant',
+        content: errorText,
+        timestamp: DateTime.now(),
+      );
+
+      state = state.copyWith(
+        messages: [...state.messages, errorMessage],
+        isLoading: false,
+      );
+    }
   }
 
   void resetChat() {

@@ -7,6 +7,7 @@ import 'package:habitly/presentation/providers/ai_habit_generator_provider.dart'
 import 'package:habitly/presentation/widgets/habit/suggestion_card.dart';
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_button_row.dart';
 import 'package:habitly/presentation/widgets/shared/onboarding/onboarding_progress_bar.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
 import 'package:sizer/sizer.dart';
 
@@ -38,9 +39,7 @@ class _AiOnboardingPageState extends ConsumerState<AiOnboardingPage> {
 
     ref.listen<AiHabitGeneratorState>(aiHabitGeneratorProvider, (prev, next) {
       if (next.addedCount != null && next.addedCount != prev?.addedCount) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${next.addedCount} habit(s) added!')),
-        );
+        AppSnackBar.showSuccess(context, '${next.addedCount} habit(s) added!');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _navigateToReminder();
         });
@@ -59,7 +58,7 @@ class _AiOnboardingPageState extends ConsumerState<AiOnboardingPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Let AI build your habits",
+                    'Let AI build your habits',
                     style: AppTextStyles.heading(context)
                         .copyWith(fontSize: 18.sp),
                   ),
@@ -108,11 +107,9 @@ class _AiOnboardingPageState extends ConsumerState<AiOnboardingPage> {
                           : () {
                               final goals = _goalsController.text.trim();
                               if (goals.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Please describe your goals first'),
-                                  ),
+                                AppSnackBar.show(
+                                  context,
+                                  'Please describe your goals first',
                                 );
                                 return;
                               }

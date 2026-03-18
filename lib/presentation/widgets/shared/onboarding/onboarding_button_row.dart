@@ -23,7 +23,7 @@ class OnboardingButtonRow extends StatelessWidget {
         children: [
           Expanded(
             child: AppButton(
-              text: "Skip",
+              text: 'Skip',
               onPressed: isLoading ? null : onSkip,
               variant: AppButtonVariant.outline,
             ),

@@ -82,14 +82,14 @@ class ReminderTimePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "When should we remind you?",
+                  'When should we remind you?',
                   style: AppTextStyles.heading(
                     context,
                   ).copyWith(fontSize: 18.sp),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Pick a time that works for your routine",
+                  'Pick a time that works for your routine',
                   style: AppTextStyles.caption(context),
                 ),
               ],

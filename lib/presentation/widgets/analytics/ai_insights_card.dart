@@ -5,7 +5,7 @@ import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/domain/entities/ai_insight.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/providers/ai_insights_provider.dart';
-import 'package:habitly/presentation/providers/analytics_provider.dart';
+import 'package:habitly/domain/entities/analytics_data.dart';
 
 class AiInsightsCard extends ConsumerWidget {
   final AnalyticsData analyticsData;

@@ -15,7 +15,7 @@ import 'package:sizer/sizer.dart';
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
-  Future<void> _continue(
+  Future<void> _handleLogin(
     BuildContext context,
     WidgetRef ref,
     String email,
@@ -49,6 +49,7 @@ class LoginPage extends ConsumerWidget {
 
     return ThemeScaffold(
       body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
             SizedBox(height: 8.h),
@@ -67,73 +68,58 @@ class LoginPage extends ConsumerWidget {
                     ).copyWith(fontSize: 20.sp),
                   ),
                   const SizedBox(height: 4),
-                  Text("Create one here!", style: AppTextStyles.link(context)),
+                  Text('Create one here!', style: AppTextStyles.link(context)),
                 ],
               ),
             ),
             SizedBox(height: 4.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: AppTextField(
-                keyboardType: TextInputType.emailAddress,
-                hintText: "email@domain.com",
-                onChanged: formNotifier.updateEmail,
-                validator: (_) => formState.emailError,
-              ),
+            AppTextField(
+              keyboardType: TextInputType.emailAddress,
+              hintText: 'email@domain.com',
+              onChanged: formNotifier.updateEmail,
+              validator: (_) => formState.emailError,
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: AppPasswordField(
-                fieldKey: "login_password",
-                hintText: "Password",
-                onChanged: formNotifier.updatePassword,
-                validator: (_) => formState.passwordError,
-              ),
+            AppPasswordField(
+              fieldKey: 'login_password',
+              hintText: 'Password',
+              onChanged: formNotifier.updatePassword,
+              validator: (_) => formState.passwordError,
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: AppButton(
-                text: "Continue",
-                isLoading: isLoading,
-                onPressed: formState.isValid
-                    ? () => _continue(
-                        context,
-                        ref,
-                        formState.email,
-                        formState.password,
-                      )
-                    : null,
-                variant: AppButtonVariant.primary,
-              ),
+            AppButton(
+              text: 'Continue',
+              isLoading: isLoading,
+              onPressed: formState.isValid
+                  ? () => _handleLogin(
+                      context,
+                      ref,
+                      formState.email,
+                      formState.password,
+                    )
+                  : null,
+              variant: AppButtonVariant.primary,
             ),
             const SizedBox(height: 24),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: const SocialAuthSection(),
-            ),
+            const SocialAuthSection(),
             SizedBox(height: 4.h),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Text.rich(
-                TextSpan(
-                  text: "By clicking continue, you agree to our ",
-                  style: AppTextStyles.caption(context),
-                  children: [
-                    TextSpan(
-                      text: "Terms of Service",
-                      style: AppTextStyles.link(context),
-                    ),
-                    TextSpan(text: "\nand "),
-                    TextSpan(
-                      text: "Privacy Policy",
-                      style: AppTextStyles.link(context),
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
+            Text.rich(
+              TextSpan(
+                text: 'By clicking continue, you agree to our ',
+                style: AppTextStyles.caption(context),
+                children: [
+                  TextSpan(
+                    text: 'Terms of Service',
+                    style: AppTextStyles.link(context),
+                  ),
+                  const TextSpan(text: '\nand '),
+                  TextSpan(
+                    text: 'Privacy Policy',
+                    style: AppTextStyles.link(context),
+                  ),
+                ],
               ),
+              textAlign: TextAlign.center,
             ),
             SizedBox(height: 4.h),
           ],

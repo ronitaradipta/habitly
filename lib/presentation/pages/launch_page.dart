@@ -38,7 +38,7 @@ class LaunchPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Keep up your Health!",
+                    'Keep up your Health!',
                     style: AppTextStyles.heading(context).copyWith(
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w500,

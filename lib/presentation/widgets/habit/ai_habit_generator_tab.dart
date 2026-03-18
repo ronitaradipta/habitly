@@ -1,9 +1,10 @@
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/presentation/providers/ai_habit_generator_provider.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 import 'package:habitly/presentation/widgets/habit/suggestion_card.dart';
 
 class AiHabitGeneratorTab extends ConsumerStatefulWidget {
@@ -30,9 +31,7 @@ class _AiHabitGeneratorTabState extends ConsumerState<AiHabitGeneratorTab> {
 
     ref.listen<AiHabitGeneratorState>(aiHabitGeneratorProvider, (previous, next) {
       if (next.addedCount != null && next.addedCount != previous?.addedCount) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${next.addedCount} habit(s) added!')),
-        );
+        AppSnackBar.showSuccess(context, '${next.addedCount} habit(s) added!');
         SchedulerBinding.instance.addPostFrameCallback((_) {
           ref.read(aiHabitGeneratorProvider.notifier).reset();
           if (context.mounted) Navigator.pop(context);
@@ -85,10 +84,9 @@ class _AiHabitGeneratorTabState extends ConsumerState<AiHabitGeneratorTab> {
                   : () {
                       final goals = _goalsController.text.trim();
                       if (goals.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please describe your goals first'),
-                          ),
+                        AppSnackBar.show(
+                          context,
+                          'Please describe your goals first',
                         );
                         return;
                       }

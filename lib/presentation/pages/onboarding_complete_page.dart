@@ -38,7 +38,7 @@ class OnboardingCompletePage extends StatelessWidget {
 
               // Congrats message
               Text(
-                "Congrats, you are all set!",
+                'Congrats, you are all set!',
                 style: AppTextStyles.heading(context).copyWith(fontSize: 20.sp),
                 textAlign: TextAlign.center,
               ),
@@ -46,7 +46,7 @@ class OnboardingCompletePage extends StatelessWidget {
 
               // Subtitle
               Text(
-                "Start tracking your habits and build a healthier lifestyle.",
+                'Start tracking your habits and build a healthier lifestyle.',
                 style: AppTextStyles.caption(context),
                 textAlign: TextAlign.center,
               ),
@@ -54,7 +54,7 @@ class OnboardingCompletePage extends StatelessWidget {
 
               // Start Tracking button
               AppButton(
-                text: "Start Tracking",
+                text: 'Start Tracking',
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, AppRoutes.home);
                 },

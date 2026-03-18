@@ -31,10 +31,6 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   void updatePassword(String password) {
     state = state.copyWith(password: password);
   }
-
-  void reset() {
-    state = const LoginFormState();
-  }
 }
 
 final loginFormProvider =

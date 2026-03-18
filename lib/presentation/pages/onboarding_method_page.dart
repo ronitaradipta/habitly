@@ -10,51 +10,45 @@ class OnboardingMethodPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-
     return ThemeScaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 6.h),
-              Text(
-                "How would you like to set up\nyour habits?",
-                style: AppTextStyles.heading(context).copyWith(fontSize: 18.sp),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 6.h),
+            Text(
+              'How would you like to set up\nyour habits?',
+              style: AppTextStyles.heading(context).copyWith(fontSize: 18.sp),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Choose your preferred onboarding method',
+              style: AppTextStyles.caption(context),
+            ),
+            SizedBox(height: 5.h),
+            _MethodCard(
+              icon: Icons.checklist_rounded,
+              title: 'Manual Setup',
+              description:
+                  'Pick categories and habits yourself from our curated list.',
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.categorySelection,
               ),
-              const SizedBox(height: 8),
-              Text(
-                "Choose your preferred onboarding method",
-                style: AppTextStyles.caption(context),
+            ),
+            const SizedBox(height: 16),
+            _MethodCard(
+              icon: Icons.auto_awesome,
+              title: 'AI-Powered',
+              description:
+                  'Describe your goals and let AI suggest personalized habits for you.',
+              onTap: () => Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.aiOnboarding,
               ),
-              SizedBox(height: 5.h),
-              _MethodCard(
-                icon: Icons.checklist_rounded,
-                title: "Manual Setup",
-                description:
-                    "Pick categories and habits yourself from our curated list.",
-                colors: colors,
-                onTap: () => Navigator.pushReplacementNamed(
-                  context,
-                  AppRoutes.categorySelection,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _MethodCard(
-                icon: Icons.auto_awesome,
-                title: "AI-Powered",
-                description:
-                    "Describe your goals and let AI suggest personalized habits for you.",
-                colors: colors,
-                onTap: () => Navigator.pushReplacementNamed(
-                  context,
-                  AppRoutes.aiOnboarding,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -65,19 +59,18 @@ class _MethodCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final AppColors colors;
   final VoidCallback onTap;
 
   const _MethodCard({
     required this.icon,
     required this.title,
     required this.description,
-    required this.colors,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(

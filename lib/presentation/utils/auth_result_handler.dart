@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/domain/entities/user.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 
 void handleAuthResult({
   required BuildContext context,
@@ -15,11 +15,9 @@ void handleAuthResult({
       }
     },
     error: (error, _) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceAll('Exception: ', '')),
-          backgroundColor: AppColors.of(context).error,
-        ),
+      AppSnackBar.showError(
+        context,
+        error.toString().replaceAll('Exception: ', ''),
       );
     },
     loading: () {},

@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:habitly/core/utils/analytics_calculator.dart';
+import 'package:habitly/domain/entities/analytics_range.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
-import 'package:habitly/presentation/providers/analytics_provider.dart';
 
 void main() {
   group('buildAnalyticsData', () {

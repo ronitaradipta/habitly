@@ -173,7 +173,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
             ),
           ),
 
-          BottomNavBar(currentItem: BottomNavItem.aiChat),
+          const BottomNavBar(currentItem: BottomNavItem.aiChat),
         ],
       ),
     );

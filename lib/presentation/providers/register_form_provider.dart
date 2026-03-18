@@ -81,10 +81,6 @@ class RegisterFormNotifier extends Notifier<RegisterFormState> {
   void updateGender(String gender) {
     state = state.copyWith(selectedGender: gender);
   }
-
-  void reset() {
-    state = const RegisterFormState();
-  }
 }
 
 final registerFormProvider =

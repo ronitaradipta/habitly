@@ -67,7 +67,7 @@ class HabitSelectionPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Pick habits that inspire you",
+                  'Pick habits that inspire you',
                   style: AppTextStyles.heading(
                     context,
                   ).copyWith(fontSize: 18.sp),

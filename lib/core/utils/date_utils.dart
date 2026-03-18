@@ -11,4 +11,7 @@ class AppDateUtils {
     if (isSameDay(date, DateTime.now())) return 'Today';
     return DateFormat('MMM d, yyyy').format(date);
   }
+
+  static DateTime toDateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 }

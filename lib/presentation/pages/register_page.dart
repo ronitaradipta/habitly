@@ -78,31 +78,31 @@ class RegisterPage extends ConsumerWidget {
                 children: [
                   Center(
                     child: Text(
-                      "Account Register",
+                      'Account Register',
                       style: AppTextStyles.heading(
                         context,
                       ).copyWith(fontSize: 18.sp),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  InputLabel(label: "Full Name"),
+                  InputLabel(label: 'Full Name'),
                   const SizedBox(height: 8),
                   AppTextField(
-                    hintText: "",
+                    hintText: '',
                     onChanged: formNotifier.updateFullName,
                     validator: (_) => formState.fullNameError,
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Email"),
+                  InputLabel(label: 'Email'),
                   const SizedBox(height: 8),
                   AppTextField(
-                    hintText: "",
+                    hintText: '',
                     keyboardType: TextInputType.emailAddress,
                     onChanged: formNotifier.updateEmail,
                     validator: (_) => formState.emailError,
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Gender"),
+                  InputLabel(label: 'Gender'),
                   const SizedBox(height: 8),
                   AppDropdown<String>(
                     value: formState.selectedGender,
@@ -119,14 +119,14 @@ class RegisterPage extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Mobile"),
+                  InputLabel(label: 'Mobile'),
                   const SizedBox(height: 8),
                   AppPhoneField(
                     onChanged: formNotifier.updateMobile,
                     validator: (_) => formState.mobileError,
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Password"),
+                  InputLabel(label: 'Password'),
                   const SizedBox(height: 8),
                   AppPasswordField(
                     fieldKey: 'register_password',
@@ -134,28 +134,16 @@ class RegisterPage extends ConsumerWidget {
                     validator: (_) => formState.passwordError,
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Confirm Password"),
+                  InputLabel(label: 'Confirm Password'),
                   const SizedBox(height: 8),
                   AppPasswordField(
                     fieldKey: 'register_confirmPassword',
                     onChanged: formNotifier.updateConfirmPassword,
                     validator: (_) => formState.confirmPasswordError,
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Forgot Password?",
-                        style: AppTextStyles.caption(
-                          context,
-                        ).copyWith(fontSize: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   AppButton(
-                    text: "Register",
+                    text: 'Register',
                     isLoading: isLoading,
                     onPressed: formState.isValid
                         ? () => _register(context, ref, formState)
@@ -164,7 +152,7 @@ class RegisterPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   AppButton(
-                    text: "Login",
+                    text: 'Login',
                     onPressed: () =>
                         Navigator.pushNamed(context, AppRoutes.login),
                     variant: AppButtonVariant.secondary,

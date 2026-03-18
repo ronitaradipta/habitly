@@ -33,14 +33,14 @@ class CategorySelectionPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "What areas do you want to focus on?",
+                  'What areas do you want to focus on?',
                   style: AppTextStyles.heading(
                     context,
                   ).copyWith(fontSize: 18.sp),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Pick 1-3 categories that matter most",
+                  'Pick 1-3 categories that matter most',
                   style: AppTextStyles.caption(context),
                 ),
               ],

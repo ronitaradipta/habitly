@@ -8,6 +8,7 @@ import 'package:habitly/presentation/utils/user_display_utils.dart';
 import 'package:habitly/presentation/widgets/profile/profile_card.dart';
 import 'package:habitly/presentation/widgets/profile/profile_menu_item.dart';
 import 'package:habitly/presentation/utils/logout_handler.dart';
+import 'package:habitly/presentation/utils/snackbar_utils.dart';
 import 'package:habitly/presentation/widgets/shared/navigation/custom_app_bar.dart';
 import 'package:habitly/presentation/widgets/shared/navigation/bottom_nav_bar.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
@@ -24,12 +25,7 @@ class ProfileMenuPage extends ConsumerWidget {
     listenForAuthRedirect(ref, context);
 
     void showComingSoon() {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Coming soon'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppSnackBar.show(context, 'Coming soon');
     }
 
     return ThemeScaffold(
@@ -113,7 +109,7 @@ class ProfileMenuPage extends ConsumerWidget {
             ),
           ),
 
-          BottomNavBar(currentItem: BottomNavItem.profile),
+          const BottomNavBar(currentItem: BottomNavItem.profile),
         ],
       ),
     );
