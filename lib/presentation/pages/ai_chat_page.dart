@@ -26,7 +26,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
     'How am I doing?',
     'Tips for consistency',
     'Which habits should I focus on?',
-    'How to build a morning routine?',
+    'Create a morning meditation habit',
   ];
 
   @override

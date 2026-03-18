@@ -70,9 +70,11 @@ void init() {
 
   // Services
   getIt.registerLazySingleton(() => LocalNotificationService(plugin: getIt()));
-  getIt.registerLazySingleton(() => GroqApiClient(firestore: getIt()));
+  getIt.registerLazySingleton(() => GroqApiClient());
   getIt.registerLazySingleton(() => AiInsightsService(client: getIt()));
-  getIt.registerLazySingleton(() => AiChatService(client: getIt()));
+  getIt.registerLazySingleton(
+    () => AiChatService(client: getIt(), addHabitUseCase: getIt()),
+  );
   getIt.registerLazySingleton(() => AiHabitGeneratorService(client: getIt()));
 
   // Repositories

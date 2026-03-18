@@ -66,6 +66,9 @@ class AiChatNotifier extends Notifier<AiChatState> {
         messages: [...state.messages, assistantMessage],
         isLoading: false,
       );
+
+      // Refresh habit list in case a habit was created via chat
+      ref.invalidate(habitProvider);
     } catch (e) {
       debugPrint('AiChatNotifier.sendMessage failed: $e');
       final errorText = e is TimeoutException

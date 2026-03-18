@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:habitly/domain/entities/category.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
 /// Returns the tools JSON array for the Groq API request body.
@@ -51,6 +54,32 @@ List<Map<String, dynamic>> getToolsSchema() {
       },
       required: ['category'],
     ),
+    _toolSchema(
+      name: 'create_habit',
+      description:
+          'Create a new habit for the user. Use when the user wants to start a new habit or asks you to create one.',
+      properties: {
+        'name': {
+          'type': 'string',
+          'description': 'Clear, specific habit name',
+        },
+        'categoryId': {
+          'type': 'string',
+          'description':
+              'Category: health, fitness, career, finance, learning, relationships, productivity, hobbies, other',
+        },
+        'frequency': {
+          'type': 'string',
+          'description':
+              'Frequency: daily, weekly, or monthly (default: daily)',
+        },
+        'reminderTime': {
+          'type': 'string',
+          'description': 'Optional reminder time in HH:mm 24-hour format',
+        },
+      },
+      required: ['name', 'categoryId'],
+    ),
   ];
 }
 
@@ -75,10 +104,11 @@ Map<String, dynamic> _toolSchema({
 }
 
 /// Executes tool calls parsed from the API response and returns JSON results.
-String executeToolCalls(
+Future<String> executeToolCalls(
   List<Map<String, dynamic>> toolCalls,
-  List<Habit> habits,
-) {
+  List<Habit> habits, {
+  AddHabitUseCase? addHabitUseCase,
+}) async {
   final results = <String, dynamic>{};
   for (final call in toolCalls) {
     final function_ = call['function'] as Map<String, dynamic>? ?? {};
@@ -95,16 +125,22 @@ String executeToolCalls(
       parsedArgs = {};
     }
 
-    results[name] = _executeTool(name, parsedArgs, habits);
+    results[name] = await _executeTool(
+      name,
+      parsedArgs,
+      habits,
+      addHabitUseCase: addHabitUseCase,
+    );
   }
   return const JsonEncoder.withIndent('  ').convert(results);
 }
 
-dynamic _executeTool(
+Future<dynamic> _executeTool(
   String name,
   Map<String, dynamic> args,
-  List<Habit> habits,
-) {
+  List<Habit> habits, {
+  AddHabitUseCase? addHabitUseCase,
+}) async {
   switch (name) {
     case 'get_all_habits':
       return _getAllHabits(habits);
@@ -118,6 +154,8 @@ dynamic _executeTool(
     case 'get_habits_by_category':
       final category = args['category'] as String;
       return _getHabitsByCategory(habits, category);
+    case 'create_habit':
+      return _createHabit(args, addHabitUseCase);
     default:
       return {'error': 'Unknown tool: $name'};
   }
@@ -273,4 +311,49 @@ Map<String, dynamic> _getHabitsByCategory(List<Habit> habits, String category) {
     'total': habitData.length,
     'habits': habitData,
   };
+}
+
+Future<Map<String, dynamic>> _createHabit(
+  Map<String, dynamic> args,
+  AddHabitUseCase? addHabitUseCase,
+) async {
+  if (addHabitUseCase == null) {
+    return {'error': 'Habit creation is not available'};
+  }
+
+  final name = args['name'] as String?;
+  if (name == null || name.isEmpty) {
+    return {'error': 'Habit name is required'};
+  }
+
+  final categoryId = args['categoryId'] as String? ?? 'other';
+  final frequencyStr = args['frequency'] as String? ?? 'daily';
+  final reminderTime = args['reminderTime'] as String?;
+
+  final category = HabitCategory.fromId(categoryId);
+  final iconName = category?.iconName ?? 'check_circle';
+  final frequency = HabitFrequency.fromName(frequencyStr);
+
+  try {
+    await addHabitUseCase(
+      name: name,
+      iconName: iconName,
+      targetDate: DateTime.now(),
+      categoryId: categoryId,
+      frequency: frequency,
+      hasReminder: reminderTime != null,
+      reminderTime: reminderTime,
+    );
+    return {
+      'success': true,
+      'habit_created': {
+        'name': name,
+        'category': category?.displayName ?? 'Other',
+        'frequency': frequency.displayName,
+        'reminder': reminderTime,
+      },
+    };
+  } catch (e) {
+    return {'error': 'Failed to create habit: $e'};
+  }
 }

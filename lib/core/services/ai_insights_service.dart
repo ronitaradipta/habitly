@@ -23,7 +23,7 @@ Return ONLY a JSON array of up to 5 insights:
     required AnalyticsRange range,
     required AnalyticsSummary summary,
   }) async {
-    if (!await _client.ensureInitialized()) {
+    if (!_client.hasApiKey) {
       debugPrint('AiInsightsService: GROQ_API_KEY is not available');
       return [];
     }

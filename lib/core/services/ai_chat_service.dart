@@ -3,18 +3,24 @@ import 'package:habitly/core/services/ai_chat_tools.dart';
 import 'package:habitly/core/services/groq_api_client.dart';
 import 'package:habitly/domain/entities/chat_message.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 
 class AiChatService {
   final GroqApiClient _client;
+  final AddHabitUseCase _addHabitUseCase;
 
-  AiChatService({required GroqApiClient client}) : _client = client;
+  AiChatService({
+    required GroqApiClient client,
+    required AddHabitUseCase addHabitUseCase,
+  })  : _client = client,
+        _addHabitUseCase = addHabitUseCase;
 
   Future<String> sendMessage({
     required String message,
     required List<ChatMessage> history,
     required List<Habit> habits,
   }) async {
-    if (!await _client.ensureInitialized()) {
+    if (!_client.hasApiKey) {
       return 'AI Chat is not available. Please set up your GROQ_API_KEY.';
     }
 
@@ -51,8 +57,11 @@ class AiChatService {
       final toolCallMaps = toolCalls
           .map((tc) => tc as Map<String, dynamic>)
           .toList();
-      final toolResults = executeToolCalls(toolCallMaps, habits);
-
+      final toolResults = await executeToolCalls(
+        toolCallMaps,
+        habits,
+        addHabitUseCase: _addHabitUseCase,
+      );
       // final response with tool data injected as context
       final stage2Messages = <Map<String, dynamic>>[
         {'role': 'system', 'content': _buildSystemPromptWithData(toolResults)},
@@ -73,22 +82,26 @@ class AiChatService {
   String _buildSystemPrompt() {
     return '''You are a friendly, knowledgeable personal habit coach. Your name is Habitly Coach.
 
-You have access to tools that can retrieve the user's habit data. Use them when the user asks about their habits, progress, streaks, or anything that requires their actual data.
+You have access to tools that can retrieve the user's habit data and create new habits.
 
-For general questions about habit building, motivation, or advice that don't require the user's specific data, respond directly without using tools.
+CRITICAL RULES:
+- When the user wants to CREATE or ADD a new habit, you MUST call the create_habit tool. Do NOT just say you created it — actually call the tool.
+- When the user asks about their habits, progress, or streaks, use the read tools (get_all_habits, get_streaks, etc.)
+- For general advice that doesn't need user data, respond directly without tools.
 
 INSTRUCTIONS:
 - Be concise and encouraging in your responses
 - Provide actionable, practical advice
 - Keep responses under 200 words unless the user asks for detail
 - Use a warm, supportive tone
-- If the user asks about habits they don't have, suggest adding them''';
+- When creating a habit with create_habit, choose an appropriate category and frequency based on context
+- You can call create_habit together with other tools in the same request''';
   }
 
   String _buildSystemPromptWithData(String toolResults) {
     return '''You are a friendly, knowledgeable personal habit coach. Your name is Habitly Coach.
 
-Here is the user's habit data you retrieved:
+Here is the result of the tools you used:
 $toolResults
 
 INSTRUCTIONS:
@@ -97,6 +110,8 @@ INSTRUCTIONS:
 - Provide actionable, practical advice
 - Keep responses under 200 words unless the user asks for detail
 - Use a warm, supportive tone
-- If the user asks about habits they don't have, suggest adding them''';
+- If the user asks about habits they don't have, suggest adding them
+- If you just created a habit, confirm what was created with details (name, category, frequency, reminder)
+- If a habit creation failed, let the user know and suggest they try again''';
   }
 }

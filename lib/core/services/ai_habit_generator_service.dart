@@ -23,7 +23,7 @@ Valid frequency values: daily, weekly, monthly''';
     required String userGoals,
     required List<Habit> existingHabits,
   }) async {
-    if (!await _client.ensureInitialized()) {
+    if (!_client.hasApiKey) {
       debugPrint('AiHabitGeneratorService: GROQ_API_KEY is not available');
       return [];
     }

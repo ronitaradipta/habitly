@@ -1,36 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GroqApiClient {
   static const defaultModel = 'openai/gpt-oss-120b';
   static const _apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
 
-  final FirebaseFirestore _firestore;
-  String _apiKey = '';
-  bool _initialized = false;
+  final String _apiKey;
 
-  GroqApiClient({required FirebaseFirestore firestore})
-    : _firestore = firestore;
+  GroqApiClient() : _apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
 
   bool get hasApiKey => _apiKey.isNotEmpty;
-
-  Future<bool> ensureInitialized() async {
-    if (_initialized) return hasApiKey;
-    try {
-      final doc = await _firestore
-          .collection('app_config')
-          .doc('api_keys')
-          .get();
-      _apiKey = (doc.data()?['groq_api_key'] as String?) ?? '';
-      _initialized = true;
-    } catch (e) {
-      debugPrint('GroqApiClient: Failed to fetch API key from Firestore: $e');
-    }
-    return hasApiKey;
-  }
 
   /// Sends a chat completion request to the Groq API.
   Future<Map<String, dynamic>> chatCompletion({
