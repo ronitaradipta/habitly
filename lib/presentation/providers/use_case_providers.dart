@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/domain/usecases/add_habit_use_case.dart';
+import 'package:habitly/domain/usecases/generate_ai_insights_use_case.dart';
+import 'package:habitly/domain/usecases/generate_habits_use_case.dart';
+import 'package:habitly/domain/usecases/send_chat_message_use_case.dart';
 import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
 import 'package:habitly/domain/usecases/get_current_user_use_case.dart';
@@ -53,4 +56,15 @@ final updateHabitsReminderUseCaseProvider = Provider(
 );
 final toggleHabitCompletionUseCaseProvider = Provider(
   (_) => di.getIt<ToggleHabitCompletionUseCase>(),
+);
+
+// AI use cases
+final generateAiInsightsUseCaseProvider = Provider(
+  (_) => di.getIt<GenerateAiInsightsUseCase>(),
+);
+final sendChatMessageUseCaseProvider = Provider(
+  (_) => di.getIt<SendChatMessageUseCase>(),
+);
+final generateHabitsUseCaseProvider = Provider(
+  (_) => di.getIt<GenerateHabitsUseCase>(),
 );

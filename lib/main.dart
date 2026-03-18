@@ -17,6 +17,9 @@ import 'package:habitly/presentation/pages/onboarding_complete_page.dart';
 import 'package:habitly/presentation/pages/profile_menu_page.dart';
 import 'package:habitly/presentation/pages/register_page.dart';
 import 'package:habitly/presentation/pages/reminder_time_page.dart';
+import 'package:habitly/presentation/pages/ai_chat_page.dart';
+import 'package:habitly/presentation/pages/onboarding_method_page.dart';
+import 'package:habitly/presentation/pages/ai_onboarding_page.dart';
 import 'package:habitly/presentation/pages/splash_screen.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/theme_provider.dart';
@@ -30,7 +33,7 @@ void main() async {
   di.init();
   await di.getIt<LocalNotificationService>().init();
 
-  runApp(const Root());
+  runApp(ProviderScope(child: const Root()));
 }
 
 class Root extends StatelessWidget {
@@ -38,12 +41,10 @@ class Root extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: Sizer(
-        builder: (context, orientation, screenType) {
-          return const MyApp();
-        },
-      ),
+    return Sizer(
+      builder: (context, orientation, screenType) {
+        return const MyApp();
+      },
     );
   }
 }
@@ -109,6 +110,9 @@ class MyApp extends ConsumerWidget {
         AppRoutes.addHabit: (context) => const AddHabitPage(),
         AppRoutes.editHabit: (context) => const EditHabitPage(),
         AppRoutes.profile: (context) => const ProfileMenuPage(),
+        AppRoutes.aiChat: (context) => const AiChatPage(),
+        AppRoutes.onboardingMethod: (context) => const OnboardingMethodPage(),
+        AppRoutes.aiOnboarding: (context) => const AiOnboardingPage(),
       },
     );
   }

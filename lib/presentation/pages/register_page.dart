@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/register_form_provider.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_dropdown.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_phone_field.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_text_field.dart';
+import 'package:habitly/presentation/widgets/shared/auth/social_auth_section.dart';
 import 'package:habitly/presentation/widgets/shared/branding/habitly_logo.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/input_label.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
@@ -39,7 +39,7 @@ class RegisterPage extends ConsumerWidget {
         context: context,
         authState: ref.read(authProvider),
         onSuccess: (user) {
-          Navigator.pushReplacementNamed(context, AppRoutes.categorySelection);
+          Navigator.pushReplacementNamed(context, AppRoutes.onboardingMethod);
         },
       );
     }
@@ -102,7 +102,7 @@ class RegisterPage extends ConsumerWidget {
                     validator: (_) => formState.emailError,
                   ),
                   const SizedBox(height: 16),
-                  InputLabel(label: "Jenis Kelamin"),
+                  InputLabel(label: "Gender"),
                   const SizedBox(height: 8),
                   AppDropdown<String>(
                     value: formState.selectedGender,
@@ -170,33 +170,7 @@ class RegisterPage extends ConsumerWidget {
                     variant: AppButtonVariant.secondary,
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: colors.border)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          "Or",
-                          style: AppTextStyles.caption(context),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: colors.border)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  AppSocialButton(
-                    label: "Sign in with Google",
-                    icon: FontAwesomeIcons.google,
-                    iconColor: Colors.red,
-                    onPressed: () {},
-                  ),
-                  const SizedBox(height: 16),
-                  AppSocialButton(
-                    label: "Sign in with Apple",
-                    icon: Icons.apple,
-                    iconColor: colors.textPrimary,
-                    onPressed: () {},
-                  ),
+                  const SocialAuthSection(),
                 ],
               ),
             ),

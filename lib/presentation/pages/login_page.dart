@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:habitly/presentation/providers/auth_provider.dart';
 import 'package:habitly/presentation/providers/login_form_provider.dart';
 import 'package:habitly/presentation/widgets/shared/buttons/app_button.dart';
 import 'package:habitly/presentation/widgets/shared/inputs/app_text_field.dart';
+import 'package:habitly/presentation/widgets/shared/auth/social_auth_section.dart';
 import 'package:habitly/presentation/widgets/shared/branding/habitly_logo.dart';
 import 'package:habitly/presentation/widgets/shared/theme_scaffold.dart';
-import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 import 'package:habitly/core/constants/routes.dart';
 import 'package:habitly/presentation/utils/auth_result_handler.dart';
@@ -44,7 +43,6 @@ class LoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = AppColors.of(context);
     final formState = ref.watch(loginFormProvider);
     final formNotifier = ref.read(loginFormProvider.notifier);
     final isLoading = ref.watch(authProvider).isLoading;
@@ -111,26 +109,9 @@ class LoginPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text("or", style: AppTextStyles.caption(context)),
-            const SizedBox(height: 24),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
-              child: AppSocialButton(
-                label: "Continue with Google",
-                icon: FontAwesomeIcons.google,
-                iconColor: Colors.red,
-                onPressed: () {},
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: AppSocialButton(
-                label: "Continue with Apple",
-                icon: Icons.apple,
-                iconColor: colors.textPrimary,
-                onPressed: () {},
-              ),
+              child: const SocialAuthSection(),
             ),
             SizedBox(height: 4.h),
             Padding(

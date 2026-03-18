@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
-import 'package:habitly/presentation/utils/habit_schedule_utils.dart';
+import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
 void main() {
   group('isHabitScheduledOnDate', () {

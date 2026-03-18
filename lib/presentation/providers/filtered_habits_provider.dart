@@ -3,7 +3,7 @@ import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
 import 'package:habitly/presentation/providers/selected_date_provider.dart';
 import 'package:habitly/presentation/providers/selected_category_provider.dart';
-import 'package:habitly/presentation/utils/habit_schedule_utils.dart';
+import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
 /// Filter by date only — used as source data for CategoryFilterBar.
 final dateFilteredHabitsProvider = Provider<AsyncValue<List<Habit>>>((ref) {

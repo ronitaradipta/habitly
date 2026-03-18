@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/core/utils/habit_validators.dart';
 import 'package:habitly/core/utils/time_utils.dart';
 import 'package:habitly/domain/entities/category.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/presentation/providers/habit_provider.dart';
+
+enum FormMode { create, edit }
+
+enum SaveResult { none, created, updated, validationError }
 
 // Wrapper to differentiate "not passed" vs "intentionally set to null"
 class Nullable<T> {
@@ -27,6 +33,8 @@ class HabitFormState {
 
   // Saving state
   final bool isSaving;
+  final SaveResult saveResult;
+  final String? validationError;
 
   const HabitFormState({
     this.name,
@@ -38,6 +46,8 @@ class HabitFormState {
     this.reminderTime,
     this.selectedCategory,
     this.isSaving = false,
+    this.saveResult = SaveResult.none,
+    this.validationError,
   });
 
   HabitFormState copyWith({
@@ -50,6 +60,8 @@ class HabitFormState {
     Nullable<TimeOfDay>? reminderTime,
     Nullable<HabitCategory>? selectedCategory,
     bool? isSaving,
+    SaveResult? saveResult,
+    Nullable<String>? validationError,
   }) {
     return HabitFormState(
       name: name ?? this.name,
@@ -65,6 +77,10 @@ class HabitFormState {
           ? selectedCategory.value
           : this.selectedCategory,
       isSaving: isSaving ?? this.isSaving,
+      saveResult: saveResult ?? this.saveResult,
+      validationError: validationError != null
+          ? validationError.value
+          : this.validationError,
     );
   }
 }
@@ -141,6 +157,83 @@ class HabitFormNotifier extends Notifier<HabitFormState> {
 
   void setSaving(bool saving) {
     state = state.copyWith(isSaving: saving);
+  }
+
+  Future<void> saveHabit(FormMode mode, Habit? initialHabit) async {
+    final nameResult = HabitValidators.validateHabitName(state.name ?? '');
+    if (!nameResult.isValid) {
+      state = state.copyWith(
+        saveResult: SaveResult.validationError,
+        validationError: Nullable(nameResult.errorMessage ?? 'Validation failed'),
+      );
+      return;
+    }
+
+    final dateResult = HabitValidators.validateHabitDate(state.selectedDate);
+    if (!dateResult.isValid) {
+      state = state.copyWith(
+        saveResult: SaveResult.validationError,
+        validationError: Nullable(dateResult.errorMessage ?? 'Validation failed'),
+      );
+      return;
+    }
+
+    final endDateResult = HabitValidators.validateEndDate(
+      state.endDate,
+      state.selectedDate,
+    );
+    if (!endDateResult.isValid) {
+      state = state.copyWith(
+        saveResult: SaveResult.validationError,
+        validationError: Nullable(endDateResult.errorMessage ?? 'Validation failed'),
+      );
+      return;
+    }
+
+    state = state.copyWith(isSaving: true);
+
+    try {
+      final notifier = ref.read(habitProvider.notifier);
+
+      if (mode == FormMode.create) {
+        final iconName = state.selectedCategory?.iconName ?? 'fitness_center';
+
+        await notifier.addHabit(
+          name: state.name ?? '',
+          iconName: iconName,
+          date: state.selectedDate!,
+          hasReminder: state.hasReminder,
+          reminderTime: state.reminderTime,
+          categoryId: state.selectedCategory?.id,
+          frequency: state.selectedFrequency ?? HabitFrequency.daily,
+          customDays: state.customDays,
+          endDate: state.endDate,
+        );
+
+        state = state.copyWith(isSaving: false, saveResult: SaveResult.created);
+      } else {
+        if (initialHabit == null) return;
+
+        final updatedHabit = initialHabit.copyWith(
+          name: state.name ?? '',
+          targetDate: state.selectedDate,
+          hasReminder: state.hasReminder,
+          reminderTime: state.reminderTime != null
+              ? TimeUtils.formatForStorage(state.reminderTime!)
+              : null,
+          categoryId: state.selectedCategory?.id,
+          frequency: state.selectedFrequency ?? HabitFrequency.daily,
+          customDays: state.customDays,
+          endDate: state.endDate,
+        );
+
+        await notifier.updateHabit(updatedHabit);
+
+        state = state.copyWith(isSaving: false, saveResult: SaveResult.updated);
+      }
+    } catch (_) {
+      state = state.copyWith(isSaving: false);
+    }
   }
 }
 

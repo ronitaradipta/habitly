@@ -161,6 +161,7 @@ class HabitListNotifier extends AsyncNotifier<List<Habit>> {
       return habits;
     });
   }
+
 }
 
 final habitProvider = AsyncNotifierProvider<HabitListNotifier, List<Habit>>(

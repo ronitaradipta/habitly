@@ -15,7 +15,7 @@ class RegisterFormState {
     this.mobile = '',
     this.password = '',
     this.confirmPassword = '',
-    this.selectedGender = 'Female',
+    this.selectedGender = 'Male',
   });
 
   bool get isValid {

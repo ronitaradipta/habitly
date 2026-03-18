@@ -31,28 +31,28 @@ class AppColors {
   }
 
   static const light = AppColors(
-    background: Color(0xFFE3FFDB),
+    background: Color(0xFFF6F3EE), // Warm Parchment
     surface: Color(0xFFFFFFFF),
-    textPrimary: Color(0xFF1A1A1A),
-    textSecondary: Color(0xFF6B7280),
-    primary: Color(0xFF2FB969),
-    border: Color(0xFFE0E0E0),
-    error: Color(0xFFE53935),
-    disabled: Color(0xFFBDBDBD),
-    dateBlue: Color(0xFF1E88E5),
-    dateOrange: Color(0xFFFB8C00),
+    textPrimary: Color(0xFF2D2A26), // Warm Charcoal
+    textSecondary: Color(0xFF8C8379), // Warm Stone
+    primary: Color(0xFF4A7C59), // Forest Sage
+    border: Color(0xFFDDD7CF), // Sand
+    error: Color(0xFFC4554D), // Terracotta Red
+    disabled: Color(0xFFC5BEB6), // Driftwood
+    dateBlue: Color(0xFF5B7FA6), // Slate Blue
+    dateOrange: Color(0xFFC8864E), // Amber Clay
   );
 
   static const dark = AppColors(
-    background: Color(0xFF181A20),
-    surface: Color(0xFF262A34),
-    textPrimary: Color(0xFFFFFFFF),
-    textSecondary: Color(0xFF8D8D98),
-    primary: Color(0xFF2FB969),
-    border: Color(0xFF404040),
-    error: Color(0xFFEF5350),
-    disabled: Color(0xFF616161),
-    dateBlue: Color(0xFF42A5F5),
-    dateOrange: Color(0xFFFFB74D),
+    background: Color(0xFF1A1816), // Deep Loam
+    surface: Color(0xFF282420), // Dark Bark
+    textPrimary: Color(0xFFF0EBE3), // Cream White
+    textSecondary: Color(0xFF9C9488), // Sandstone
+    primary: Color(0xFF6DAF7B), // Light Sage
+    border: Color(0xFF3D3733), // Shadow Bark
+    error: Color(0xFFD4736C), // Faded Terracotta
+    disabled: Color(0xFF5A5349), // Weathered Wood
+    dateBlue: Color(0xFF7FA3C4), // Faded Denim
+    dateOrange: Color(0xFFD4A06A), // Honey Amber
   );
 }

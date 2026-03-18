@@ -13,4 +13,7 @@ class AppRoutes {
   static const addHabit = '/add-habit';
   static const editHabit = '/edit-habit';
   static const profile = '/profile';
+  static const aiChat = '/ai-chat';
+  static const onboardingMethod = '/onboarding-method';
+  static const aiOnboarding = '/ai-onboarding';
 }

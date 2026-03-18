@@ -1,35 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habitly/domain/entities/analytics_range.dart';
+import 'package:habitly/domain/entities/analytics_summary.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/presentation/providers/habit_provider.dart';
-import 'package:habitly/presentation/utils/habit_schedule_utils.dart';
+import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
-enum AnalyticsRange {
-  last7,
-  last30,
-  last90;
-
-  int get days {
-    switch (this) {
-      case AnalyticsRange.last7:
-        return 7;
-      case AnalyticsRange.last30:
-        return 30;
-      case AnalyticsRange.last90:
-        return 90;
-    }
-  }
-
-  String get label {
-    switch (this) {
-      case AnalyticsRange.last7:
-        return '7D';
-      case AnalyticsRange.last30:
-        return '30D';
-      case AnalyticsRange.last90:
-        return '90D';
-    }
-  }
-}
+export 'package:habitly/domain/entities/analytics_range.dart';
+export 'package:habitly/domain/entities/analytics_summary.dart';
 
 class DailyAnalyticsPoint {
   final DateTime date;
@@ -48,24 +25,6 @@ class DailyAnalyticsPoint {
   }
 
   bool get isPerfect => scheduledCount > 0 && completedCount == scheduledCount;
-}
-
-class AnalyticsSummary {
-  final double avgCompletionRate;
-  final int perfectDays;
-  final int currentStreak;
-  final int bestStreak;
-  final int totalCompleted;
-  final int totalScheduled;
-
-  const AnalyticsSummary({
-    required this.avgCompletionRate,
-    required this.perfectDays,
-    required this.currentStreak,
-    required this.bestStreak,
-    required this.totalCompleted,
-    required this.totalScheduled,
-  });
 }
 
 class AnalyticsData {

@@ -28,8 +28,21 @@ import 'package:habitly/domain/usecases/setup_onboarding_habits_use_case.dart';
 import 'package:habitly/domain/usecases/toggle_habit_completion_use_case.dart';
 import 'package:habitly/domain/usecases/update_habit_use_case.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
+import 'package:habitly/core/services/ai_chat_service.dart';
+import 'package:habitly/core/services/ai_habit_generator_service.dart';
+import 'package:habitly/core/services/ai_insights_service.dart';
+import 'package:habitly/core/services/groq_api_client.dart';
 import 'package:habitly/core/services/local_notification_service.dart';
+import 'package:habitly/data/repositories/groq_ai_chat_repository.dart';
+import 'package:habitly/data/repositories/groq_ai_habit_generator_repository.dart';
+import 'package:habitly/data/repositories/groq_ai_insights_repository.dart';
+import 'package:habitly/domain/repositories/ai_chat_repository.dart';
+import 'package:habitly/domain/repositories/ai_habit_generator_repository.dart';
+import 'package:habitly/domain/repositories/ai_insights_repository.dart';
+import 'package:habitly/domain/usecases/generate_ai_insights_use_case.dart';
+import 'package:habitly/domain/usecases/generate_habits_use_case.dart';
+import 'package:habitly/domain/usecases/send_chat_message_use_case.dart';
+import 'package:habitly/domain/usecases/update_habits_reminder_use_case.dart';
 
 final getIt = GetIt.instance;
 
@@ -57,6 +70,10 @@ void init() {
 
   // Services
   getIt.registerLazySingleton(() => LocalNotificationService(plugin: getIt()));
+  getIt.registerLazySingleton(() => GroqApiClient(firestore: getIt()));
+  getIt.registerLazySingleton(() => AiInsightsService(client: getIt()));
+  getIt.registerLazySingleton(() => AiChatService(client: getIt()));
+  getIt.registerLazySingleton(() => AiHabitGeneratorService(client: getIt()));
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
@@ -72,6 +89,15 @@ void init() {
   getIt.registerLazySingleton<HabitRepository>(
     () =>
         FirestoreHabitRepository(datasource: getIt(), authDatasource: getIt()),
+  );
+  getIt.registerLazySingleton<AiInsightsRepository>(
+    () => GroqAiInsightsRepository(getIt()),
+  );
+  getIt.registerLazySingleton<AiChatRepository>(
+    () => GroqAiChatRepository(getIt()),
+  );
+  getIt.registerLazySingleton<AiHabitGeneratorRepository>(
+    () => GroqAiHabitGeneratorRepository(getIt()),
   );
 
   // Use Cases - Auth
@@ -94,4 +120,9 @@ void init() {
   getIt.registerLazySingleton(() => SetupOnboardingHabitsUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateHabitsReminderUseCase(getIt()));
   getIt.registerLazySingleton(() => ToggleHabitCompletionUseCase(getIt()));
+
+  // Use Cases - AI
+  getIt.registerLazySingleton(() => GenerateAiInsightsUseCase(getIt()));
+  getIt.registerLazySingleton(() => SendChatMessageUseCase(getIt()));
+  getIt.registerLazySingleton(() => GenerateHabitsUseCase(getIt()));
 }
