@@ -30,14 +30,6 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(aiChatProvider.notifier).resetChat();
-    });
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
@@ -64,16 +56,55 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
     }
   }
 
+  Future<void> _showClearHistoryDialog() async {
+    final colors = AppColors.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('New Chat', style: AppTextStyles.headingSmall(context)),
+        content: Text(
+          'This will clear your entire chat history. Are you sure?',
+          style: AppTextStyles.body(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: AppTextStyles.body(context).copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Clear',
+              style: AppTextStyles.body(context).copyWith(
+                color: colors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(aiChatProvider.notifier).clearHistory();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(aiChatProvider);
+    final asyncState = ref.watch(aiChatProvider);
     final colors = AppColors.of(context);
 
     listenForAuthRedirect(ref, context);
 
     ref.listen(aiChatProvider, (previous, next) {
-      if (previous != null &&
-          previous.messages.length != next.messages.length) {
+      final prevMessages = previous?.asData?.value.messages ?? [];
+      final nextMessages = next.asData?.value.messages ?? [];
+      if (prevMessages.length != nextMessages.length) {
         Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
       }
     });
@@ -82,32 +113,56 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
       showThemeButton: false,
       body: Column(
         children: [
-          const CustomAppBar(title: 'AI Coach'),
+          CustomAppBar(
+            title: 'AI Coach',
+            trailing: [
+              IconButton(
+                onPressed: _showClearHistoryDialog,
+                icon: Icon(
+                  Icons.add_comment_outlined,
+                  color: colors.textSecondary,
+                ),
+                tooltip: 'New Chat',
+              ),
+            ],
+          ),
 
           // Messages
           Expanded(
-            child: chatState.messages.isEmpty
-                ? ChatWelcomeView(
+            child: asyncState.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(
+                child: Text(
+                  'Failed to load chat history',
+                  style: AppTextStyles.body(context),
+                ),
+              ),
+              data: (chatState) {
+                if (chatState.messages.isEmpty) {
+                  return ChatWelcomeView(
                     suggestedQuestions: _suggestedQuestions,
                     onQuestionTap: _sendMessage,
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount:
-                        chatState.messages.length +
-                        (chatState.isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == chatState.messages.length) {
-                        return const ChatTypingIndicator();
-                      }
-                      final message = chatState.messages[index];
-                      return ChatMessageBubble(message: message);
-                    },
+                  );
+                }
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
+                  itemCount: chatState.messages.length +
+                      (chatState.isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == chatState.messages.length) {
+                      return const ChatTypingIndicator();
+                    }
+                    final message = chatState.messages[index];
+                    return ChatMessageBubble(message: message);
+                  },
+                );
+              },
+            ),
           ),
 
           // Input
@@ -153,17 +208,19 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
                         isDense: true,
                       ),
                       textInputAction: TextInputAction.send,
-                      onSubmitted: chatState.isLoading ? null : _sendMessage,
+                      onSubmitted: (asyncState.asData?.value.isLoading ?? false)
+                          ? null
+                          : _sendMessage,
                     ),
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    onPressed: chatState.isLoading
+                    onPressed: (asyncState.asData?.value.isLoading ?? false)
                         ? null
                         : () => _sendMessage(_controller.text),
                     icon: Icon(
                       Icons.send_rounded,
-                      color: chatState.isLoading
+                      color: (asyncState.asData?.value.isLoading ?? false)
                           ? colors.disabled
                           : colors.primary,
                     ),

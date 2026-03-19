@@ -39,6 +39,12 @@ import 'package:habitly/data/repositories/groq_ai_insights_repository.dart';
 import 'package:habitly/domain/repositories/ai_chat_repository.dart';
 import 'package:habitly/domain/repositories/ai_habit_generator_repository.dart';
 import 'package:habitly/domain/repositories/ai_insights_repository.dart';
+import 'package:habitly/domain/repositories/chat_history_repository.dart';
+import 'package:habitly/data/datasources/chat_history_datasource.dart';
+import 'package:habitly/data/repositories/firestore_chat_history_repository.dart';
+import 'package:habitly/domain/usecases/clear_chat_history_use_case.dart';
+import 'package:habitly/domain/usecases/get_chat_history_use_case.dart';
+import 'package:habitly/domain/usecases/save_chat_message_use_case.dart';
 import 'package:habitly/domain/usecases/generate_ai_insights_use_case.dart';
 import 'package:habitly/domain/usecases/generate_habits_use_case.dart';
 import 'package:habitly/domain/usecases/send_chat_message_use_case.dart';
@@ -63,6 +69,9 @@ void init() {
   );
   getIt.registerLazySingleton<ThemeDatasource>(
     () => FirestoreThemeDatasource(firestore: getIt()),
+  );
+  getIt.registerLazySingleton<ChatHistoryDatasource>(
+    () => FirestoreChatHistoryDatasource(firestore: getIt()),
   );
 
   // Plugins
@@ -101,6 +110,12 @@ void init() {
   getIt.registerLazySingleton<AiHabitGeneratorRepository>(
     () => GroqAiHabitGeneratorRepository(getIt()),
   );
+  getIt.registerLazySingleton<ChatHistoryRepository>(
+    () => FirestoreChatHistoryRepository(
+      datasource: getIt(),
+      authDatasource: getIt(),
+    ),
+  );
 
   // Use Cases - Auth
   getIt.registerLazySingleton(() => GetCurrentUserUseCase(getIt()));
@@ -127,4 +142,9 @@ void init() {
   getIt.registerLazySingleton(() => GenerateAiInsightsUseCase(getIt()));
   getIt.registerLazySingleton(() => SendChatMessageUseCase(getIt()));
   getIt.registerLazySingleton(() => GenerateHabitsUseCase(getIt()));
+
+  // Use Cases - Chat History
+  getIt.registerLazySingleton(() => GetChatHistoryUseCase(getIt()));
+  getIt.registerLazySingleton(() => SaveChatMessageUseCase(getIt()));
+  getIt.registerLazySingleton(() => ClearChatHistoryUseCase(getIt()));
 }

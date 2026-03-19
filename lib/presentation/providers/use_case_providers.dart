@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/generate_ai_insights_use_case.dart';
 import 'package:habitly/domain/usecases/generate_habits_use_case.dart';
+import 'package:habitly/domain/usecases/clear_chat_history_use_case.dart';
+import 'package:habitly/domain/usecases/get_chat_history_use_case.dart';
+import 'package:habitly/domain/usecases/save_chat_message_use_case.dart';
 import 'package:habitly/domain/usecases/send_chat_message_use_case.dart';
 import 'package:habitly/domain/usecases/check_email_registered_use_case.dart';
 import 'package:habitly/domain/usecases/delete_habit_use_case.dart';
@@ -67,4 +70,15 @@ final sendChatMessageUseCaseProvider = Provider(
 );
 final generateHabitsUseCaseProvider = Provider(
   (_) => di.getIt<GenerateHabitsUseCase>(),
+);
+
+// Chat History use cases
+final getChatHistoryUseCaseProvider = Provider(
+  (_) => di.getIt<GetChatHistoryUseCase>(),
+);
+final saveChatMessageUseCaseProvider = Provider(
+  (_) => di.getIt<SaveChatMessageUseCase>(),
+);
+final clearChatHistoryUseCaseProvider = Provider(
+  (_) => di.getIt<ClearChatHistoryUseCase>(),
 );
