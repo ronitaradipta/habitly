@@ -31,7 +31,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:habitly/core/services/ai_chat_service.dart';
 import 'package:habitly/core/services/ai_habit_generator_service.dart';
 import 'package:habitly/core/services/ai_insights_service.dart';
-import 'package:habitly/core/services/groq_api_client.dart';
+import 'package:habitly/core/services/openrouter_api_client.dart';
 import 'package:habitly/core/services/local_notification_service.dart';
 import 'package:habitly/data/repositories/groq_ai_chat_repository.dart';
 import 'package:habitly/data/repositories/groq_ai_habit_generator_repository.dart';
@@ -79,7 +79,7 @@ void init() {
 
   // Services
   getIt.registerLazySingleton(() => LocalNotificationService(plugin: getIt()));
-  getIt.registerLazySingleton(() => GroqApiClient());
+  getIt.registerLazySingleton(() => OpenRouterApiClient());
   getIt.registerLazySingleton(() => AiInsightsService(client: getIt()));
   getIt.registerLazySingleton(
     () => AiChatService(client: getIt()),

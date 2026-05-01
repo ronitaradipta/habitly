@@ -3,18 +3,17 @@ import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-@Deprecated('Use OpenRouterApiClient instead')
-class GroqApiClient {
-  static const defaultModel = 'llama-3.3-70b-versatile';
-  static const _apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+class OpenRouterApiClient {
+  static const defaultModel = 'openai/gpt-oss-120b:free';
+  static const _apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
   final String _apiKey;
 
-  GroqApiClient() : _apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
+  OpenRouterApiClient() : _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? '';
 
   bool get hasApiKey => _apiKey.isNotEmpty;
 
-  /// Sends a chat completion request to the Groq API.
+  /// Sends a chat completion request to the OpenRouter API.
   Future<Map<String, dynamic>> chatCompletion({
     required List<Map<String, dynamic>> messages,
     List<Map<String, dynamic>>? tools,
@@ -45,6 +44,7 @@ class GroqApiClient {
     try {
       final request = await client.postUrl(Uri.parse(_apiUrl));
       request.headers.set('Authorization', 'Bearer $_apiKey');
+      request.headers.set('X-Title', 'HabitLy');
       request.headers.set('Content-Type', 'application/json; charset=utf-8');
       request.add(utf8.encode(jsonEncode(body)));
 
@@ -59,13 +59,13 @@ class GroqApiClient {
       // Guard against unexpectedly large responses (>2 MB)
       if (responseBody.length > 2 * 1024 * 1024) {
         throw Exception(
-          'Groq API response too large: ${responseBody.length} bytes',
+          'OpenRouter API response too large: ${responseBody.length} bytes',
         );
       }
 
       if (response.statusCode >= 300) {
         throw Exception(
-          'Groq API error (${response.statusCode}): $responseBody',
+          'OpenRouter API error (${response.statusCode}): $responseBody',
         );
       }
 

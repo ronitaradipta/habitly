@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:habitly/core/services/groq_api_client.dart';
+import 'package:habitly/core/services/openrouter_api_client.dart';
 import 'package:habitly/domain/entities/ai_insight.dart';
 import 'package:habitly/domain/entities/analytics_range.dart';
 import 'package:habitly/domain/entities/analytics_summary.dart';
@@ -9,9 +9,9 @@ import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
 class AiInsightsService {
-  final GroqApiClient _client;
+  final OpenRouterApiClient _client;
 
-  AiInsightsService({required GroqApiClient client}) : _client = client;
+  AiInsightsService({required OpenRouterApiClient client}) : _client = client;
 
   static const _systemPrompt =
       '''You are a personal habit coach. Analyze the user's habit data and provide personal, specific, and actionable insights.
@@ -24,7 +24,7 @@ Return ONLY a JSON array of up to 5 insights:
     required AnalyticsSummary summary,
   }) async {
     if (!_client.hasApiKey) {
-      debugPrint('AiInsightsService: GROQ_API_KEY is not available');
+      debugPrint('AiInsightsService: OPENROUTER_API_KEY is not available');
       return [];
     }
     try {
@@ -36,7 +36,7 @@ Return ONLY a JSON array of up to 5 insights:
         ],
         jsonMode: true,
       );
-      final content = GroqApiClient.extractContent(response);
+      final content = OpenRouterApiClient.extractContent(response);
       return _parseInsights(content);
     } catch (e) {
       debugPrint('AiInsightsService error: $e');

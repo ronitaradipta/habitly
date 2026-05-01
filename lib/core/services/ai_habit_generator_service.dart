@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:habitly/core/services/groq_api_client.dart';
+import 'package:habitly/core/services/openrouter_api_client.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/suggested_habit.dart';
 
 class AiHabitGeneratorService {
-  final GroqApiClient _client;
+  final OpenRouterApiClient _client;
 
-  AiHabitGeneratorService({required GroqApiClient client}) : _client = client;
+  AiHabitGeneratorService({required OpenRouterApiClient client}) : _client = client;
 
   static const _systemPrompt = '''You are a habit design expert. Given user goals, suggest 5-8 specific, actionable habits they should build.
 Always respond in English.
@@ -24,7 +24,7 @@ Valid frequency values: daily, weekly, monthly''';
     required List<Habit> existingHabits,
   }) async {
     if (!_client.hasApiKey) {
-      debugPrint('AiHabitGeneratorService: GROQ_API_KEY is not available');
+      debugPrint('AiHabitGeneratorService: OPENROUTER_API_KEY is not available');
       return [];
     }
 
@@ -37,7 +37,7 @@ Valid frequency values: daily, weekly, monthly''';
         ],
         jsonMode: true,
       );
-      final content = GroqApiClient.extractContent(response);
+      final content = OpenRouterApiClient.extractContent(response);
       return _parseHabits(content);
     } catch (e) {
       debugPrint('AiHabitGeneratorService error: $e');

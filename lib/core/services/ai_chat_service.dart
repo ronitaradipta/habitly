@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:habitly/core/services/ai_chat_tools.dart';
-import 'package:habitly/core/services/groq_api_client.dart';
+import 'package:habitly/core/services/openrouter_api_client.dart';
 import 'package:habitly/domain/entities/chat_message.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/repositories/ai_chat_repository.dart';
 
 class AiChatService {
-  final GroqApiClient _client;
+  final OpenRouterApiClient _client;
 
-  AiChatService({required GroqApiClient client}) : _client = client;
+  AiChatService({required OpenRouterApiClient client}) : _client = client;
 
   Future<String> sendMessage({
     required String message,
@@ -18,7 +18,7 @@ class AiChatService {
     void Function(String)? onToolStatus,
   }) async {
     if (!_client.hasApiKey) {
-      return 'AI Chat is not available. Please set up your GROQ_API_KEY.';
+      return 'AI Chat is not available. Please set up your OPENROUTER_API_KEY.';
     }
 
     try {
@@ -89,7 +89,7 @@ class AiChatService {
       final chat2Response = await _client.chatCompletion(
         messages: stage2Messages,
       );
-      return GroqApiClient.extractContent(chat2Response);
+      return OpenRouterApiClient.extractContent(chat2Response);
     } catch (e) {
       debugPrint('AiChatService error: $e');
       return 'Sorry, I encountered an error. Please try again.';
