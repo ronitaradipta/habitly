@@ -3,7 +3,12 @@ import 'package:habitly/core/theme/app_colors.dart';
 import 'package:habitly/core/theme/text_style.dart';
 
 class ChatTypingIndicator extends StatelessWidget {
-  const ChatTypingIndicator({super.key});
+  final String statusText;
+
+  const ChatTypingIndicator({
+    super.key,
+    this.statusText = 'Thinking...',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +47,15 @@ class ChatTypingIndicator extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'Thinking...',
-              style: AppTextStyles.captionSmall(
-                context,
-              ).copyWith(color: colors.textSecondary),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                statusText,
+                key: ValueKey(statusText),
+                style: AppTextStyles.captionSmall(
+                  context,
+                ).copyWith(color: colors.textSecondary),
+              ),
             ),
           ],
         ),

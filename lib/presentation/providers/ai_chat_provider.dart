@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habitly/core/constants/app_constants.dart';
 import 'package:habitly/domain/entities/chat_message.dart';
 import 'package:habitly/domain/entities/habit.dart';
+import 'package:habitly/domain/entities/habit_frequency.dart';
+import 'package:habitly/domain/usecases/add_habit_use_case.dart';
 import 'package:habitly/domain/usecases/clear_chat_history_use_case.dart';
 import 'package:habitly/domain/usecases/get_chat_history_use_case.dart';
 import 'package:habitly/domain/usecases/save_chat_message_use_case.dart';
@@ -15,25 +17,31 @@ import 'package:habitly/presentation/providers/use_case_providers.dart';
 class AiChatState {
   final List<ChatMessage> messages;
   final bool isLoading;
+  final String? toolStatus;
 
   const AiChatState({
     this.messages = const [],
     this.isLoading = false,
+    this.toolStatus,
   });
 
   AiChatState copyWith({
     List<ChatMessage>? messages,
     bool? isLoading,
+    String? toolStatus,
   }) =>
       AiChatState(
         messages: messages ?? this.messages,
         isLoading: isLoading ?? this.isLoading,
+        toolStatus: toolStatus,
       );
 }
 
 class AiChatNotifier extends AsyncNotifier<AiChatState> {
   SendChatMessageUseCase get _sendUseCase =>
       ref.read(sendChatMessageUseCaseProvider);
+  AddHabitUseCase get _addHabitUseCase =>
+      ref.read(addHabitUseCaseProvider);
   GetChatHistoryUseCase get _getHistoryUseCase =>
       ref.read(getChatHistoryUseCaseProvider);
   SaveChatMessageUseCase get _saveMessageUseCase =>
@@ -70,12 +78,35 @@ class AiChatNotifier extends AsyncNotifier<AiChatState> {
 
     try {
       final habits = ref.read(habitProvider).value ?? <Habit>[];
-      final updatedState = state.asData!.value;
+      final updatedState = state.asData?.value ?? const AiChatState();
 
+      final addHabit = _addHabitUseCase;
       final response = await _sendUseCase(
         message: text,
         history: updatedState.messages,
         habits: habits,
+        onCreateHabit: ({
+          required name,
+          required iconName,
+          required targetDate,
+          categoryId,
+          frequency = HabitFrequency.daily,
+          hasReminder = false,
+          reminderTime,
+        }) =>
+            addHabit(
+              name: name,
+              iconName: iconName,
+              targetDate: targetDate,
+              categoryId: categoryId,
+              frequency: frequency,
+              hasReminder: hasReminder,
+              reminderTime: reminderTime,
+            ),
+        onToolStatus: (status) {
+          final current = state.asData?.value ?? const AiChatState();
+          state = AsyncData(current.copyWith(toolStatus: status));
+        },
       );
 
       final assistantMessage = ChatMessage(
@@ -109,7 +140,7 @@ class AiChatNotifier extends AsyncNotifier<AiChatState> {
         timestamp: DateTime.now(),
       );
 
-      final current = state.asData!.value;
+      final current = state.asData?.value ?? const AiChatState();
       state = AsyncData(
         current.copyWith(
           messages: [...current.messages, errorMessage],

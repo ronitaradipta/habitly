@@ -89,7 +89,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       await ref.read(aiChatProvider.notifier).clearHistory();
     }
   }
@@ -155,10 +155,18 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
                       (chatState.isLoading ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == chatState.messages.length) {
-                      return const ChatTypingIndicator();
+                      return ChatTypingIndicator(
+                        key: ValueKey('typing-indicator'),
+                        statusText: chatState.toolStatus ?? 'Thinking...',
+                      );
                     }
                     final message = chatState.messages[index];
-                    return ChatMessageBubble(message: message);
+                    return ChatMessageBubble(
+                      key: ValueKey(
+                        '${message.role}-${message.timestamp.millisecondsSinceEpoch}-$index',
+                      ),
+                      message: message,
+                    );
                   },
                 );
               },

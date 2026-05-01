@@ -82,7 +82,7 @@ void init() {
   getIt.registerLazySingleton(() => GroqApiClient());
   getIt.registerLazySingleton(() => AiInsightsService(client: getIt()));
   getIt.registerLazySingleton(
-    () => AiChatService(client: getIt(), addHabitUseCase: getIt()),
+    () => AiChatService(client: getIt()),
   );
   getIt.registerLazySingleton(() => AiHabitGeneratorService(client: getIt()));
 

@@ -11,10 +11,14 @@ class SendChatMessageUseCase {
     required String message,
     required List<ChatMessage> history,
     required List<Habit> habits,
+    CreateHabitCallback? onCreateHabit,
+    void Function(String)? onToolStatus,
   }) =>
       _repository.sendMessage(
         message: message,
         history: history,
         habits: habits,
+        onCreateHabit: onCreateHabit,
+        onToolStatus: onToolStatus,
       );
 }

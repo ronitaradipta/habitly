@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:habitly/domain/entities/category.dart';
 import 'package:habitly/domain/entities/habit.dart';
 import 'package:habitly/domain/entities/habit_frequency.dart';
-import 'package:habitly/domain/usecases/add_habit_use_case.dart';
+import 'package:habitly/domain/repositories/ai_chat_repository.dart';
 import 'package:habitly/core/utils/habit_schedule_utils.dart';
 
 /// Returns the tools JSON array for the Groq API request body.
@@ -103,14 +103,20 @@ Map<String, dynamic> _toolSchema({
   };
 }
 
-/// Executes tool calls parsed from the API response and returns JSON results.
-Future<String> executeToolCalls(
+/// Executes tool calls parsed from the API response.
+///
+/// Returns a list of tool result maps, each containing:
+/// - `tool_call_id`: the id from the original tool call
+/// - `name`: the function name
+/// - `content`: JSON-encoded result string
+Future<List<Map<String, dynamic>>> executeToolCalls(
   List<Map<String, dynamic>> toolCalls,
   List<Habit> habits, {
-  AddHabitUseCase? addHabitUseCase,
+  CreateHabitCallback? onCreateHabit,
 }) async {
-  final results = <String, dynamic>{};
+  final results = <Map<String, dynamic>>[];
   for (final call in toolCalls) {
+    final id = call['id'] as String? ?? '';
     final function_ = call['function'] as Map<String, dynamic>? ?? {};
     final name = function_['name'] as String? ?? '';
     if (name.isEmpty) continue;
@@ -125,21 +131,26 @@ Future<String> executeToolCalls(
       parsedArgs = {};
     }
 
-    results[name] = await _executeTool(
+    final result = await _executeTool(
       name,
       parsedArgs,
       habits,
-      addHabitUseCase: addHabitUseCase,
+      onCreateHabit: onCreateHabit,
     );
+    results.add({
+      'tool_call_id': id,
+      'name': name,
+      'content': jsonEncode(result),
+    });
   }
-  return const JsonEncoder.withIndent('  ').convert(results);
+  return results;
 }
 
 Future<dynamic> _executeTool(
   String name,
   Map<String, dynamic> args,
   List<Habit> habits, {
-  AddHabitUseCase? addHabitUseCase,
+  CreateHabitCallback? onCreateHabit,
 }) async {
   switch (name) {
     case 'get_all_habits':
@@ -155,7 +166,7 @@ Future<dynamic> _executeTool(
       final category = args['category'] as String;
       return _getHabitsByCategory(habits, category);
     case 'create_habit':
-      return _createHabit(args, addHabitUseCase);
+      return _createHabit(args, onCreateHabit);
     default:
       return {'error': 'Unknown tool: $name'};
   }
@@ -315,9 +326,9 @@ Map<String, dynamic> _getHabitsByCategory(List<Habit> habits, String category) {
 
 Future<Map<String, dynamic>> _createHabit(
   Map<String, dynamic> args,
-  AddHabitUseCase? addHabitUseCase,
+  CreateHabitCallback? onCreateHabit,
 ) async {
-  if (addHabitUseCase == null) {
+  if (onCreateHabit == null) {
     return {'error': 'Habit creation is not available'};
   }
 
@@ -335,7 +346,7 @@ Future<Map<String, dynamic>> _createHabit(
   final frequency = HabitFrequency.fromName(frequencyStr);
 
   try {
-    await addHabitUseCase(
+    await onCreateHabit(
       name: name,
       iconName: iconName,
       targetDate: DateTime.now(),

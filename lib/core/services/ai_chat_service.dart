@@ -3,22 +3,19 @@ import 'package:habitly/core/services/ai_chat_tools.dart';
 import 'package:habitly/core/services/groq_api_client.dart';
 import 'package:habitly/domain/entities/chat_message.dart';
 import 'package:habitly/domain/entities/habit.dart';
-import 'package:habitly/domain/usecases/add_habit_use_case.dart';
+import 'package:habitly/domain/repositories/ai_chat_repository.dart';
 
 class AiChatService {
   final GroqApiClient _client;
-  final AddHabitUseCase _addHabitUseCase;
 
-  AiChatService({
-    required GroqApiClient client,
-    required AddHabitUseCase addHabitUseCase,
-  })  : _client = client,
-        _addHabitUseCase = addHabitUseCase;
+  AiChatService({required GroqApiClient client}) : _client = client;
 
   Future<String> sendMessage({
     required String message,
     required List<ChatMessage> history,
     required List<Habit> habits,
+    CreateHabitCallback? onCreateHabit,
+    void Function(String)? onToolStatus,
   }) async {
     if (!_client.hasApiKey) {
       return 'AI Chat is not available. Please set up your GROQ_API_KEY.';
@@ -53,18 +50,38 @@ class AiChatService {
         return (responseMessage['content'] as String?) ?? '';
       }
 
-      // Execute tool calls and collect results
+      // Execute tool calls and collect individual results
       final toolCallMaps = toolCalls
           .map((tc) => tc as Map<String, dynamic>)
           .toList();
+
+      // Notify UI about which tools are being called
+      for (final call in toolCallMaps) {
+        final fn = call['function'] as Map<String, dynamic>? ?? {};
+        final name = fn['name'] as String? ?? '';
+        if (name.isNotEmpty) {
+          onToolStatus?.call(_toolDisplayName(name));
+          await Future.delayed(const Duration(milliseconds: 800));
+        }
+      }
+
       final toolResults = await executeToolCalls(
         toolCallMaps,
         habits,
-        addHabitUseCase: _addHabitUseCase,
+        onCreateHabit: onCreateHabit,
       );
-      // final response with tool data injected as context
+
+      // Format tool results as readable context for the system prompt.
+      // We avoid using role: "tool" messages because this model does not
+      // respect tool_choice: 'none' and will attempt further tool calls.
+      final toolDataSummary = toolResults
+          .map((r) => '[${r['name']}]: ${r['content']}')
+          .join('\n');
+
+      onToolStatus?.call('Generating response...');
+
       final stage2Messages = <Map<String, dynamic>>[
-        {'role': 'system', 'content': _buildSystemPromptWithData(toolResults)},
+        {'role': 'system', 'content': _buildResponsePrompt(toolDataSummary)},
         for (final msg in history) {'role': msg.role, 'content': msg.content},
         {'role': 'user', 'content': message},
       ];
@@ -77,6 +94,35 @@ class AiChatService {
       debugPrint('AiChatService error: $e');
       return 'Sorry, I encountered an error. Please try again.';
     }
+  }
+
+  String _toolDisplayName(String toolName) {
+    return switch (toolName) {
+      'get_all_habits' => 'Fetching your habits...',
+      'get_habit_completion_stats' => 'Checking completion stats...',
+      'get_today_summary' => "Getting today's summary...",
+      'get_streaks' => 'Checking your streaks...',
+      'get_habits_by_category' => 'Filtering by category...',
+      'create_habit' => 'Creating a new habit...',
+      _ => 'Processing...',
+    };
+  }
+
+  String _buildResponsePrompt(String toolData) {
+    return '''You are a friendly, knowledgeable personal habit coach. Your name is Habitly Coach.
+
+Here is the user's data you retrieved:
+$toolData
+
+INSTRUCTIONS:
+- Be concise and encouraging in your responses
+- Reference the user's specific habits and data in your response
+- Provide actionable, practical advice
+- Keep responses under 200 words unless the user asks for detail
+- Use a warm, supportive tone
+- If the user asks about habits they don't have, suggest adding them
+- If you just created a habit, confirm what was created with details (name, category, frequency, reminder)
+- If a habit creation failed, let the user know and suggest they try again''';
   }
 
   String _buildSystemPrompt() {
@@ -98,20 +144,4 @@ INSTRUCTIONS:
 - You can call create_habit together with other tools in the same request''';
   }
 
-  String _buildSystemPromptWithData(String toolResults) {
-    return '''You are a friendly, knowledgeable personal habit coach. Your name is Habitly Coach.
-
-Here is the result of the tools you used:
-$toolResults
-
-INSTRUCTIONS:
-- Be concise and encouraging in your responses
-- Reference the user's specific habits and data in your response
-- Provide actionable, practical advice
-- Keep responses under 200 words unless the user asks for detail
-- Use a warm, supportive tone
-- If the user asks about habits they don't have, suggest adding them
-- If you just created a habit, confirm what was created with details (name, category, frequency, reminder)
-- If a habit creation failed, let the user know and suggest they try again''';
-  }
 }

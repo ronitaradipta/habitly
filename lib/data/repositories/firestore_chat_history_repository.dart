@@ -19,7 +19,7 @@ class FirestoreChatHistoryRepository implements ChatHistoryRepository {
   @override
   Future<List<ChatMessage>> getMessages() async {
     final uid = _uid;
-    if (uid == null) return [];
+    if (uid == null) throw Exception('User not authenticated');
     final models = await _datasource.getMessages(uid);
     return models.map((m) => m.toEntity()).toList();
   }
@@ -27,14 +27,14 @@ class FirestoreChatHistoryRepository implements ChatHistoryRepository {
   @override
   Future<void> addMessage(ChatMessage message) async {
     final uid = _uid;
-    if (uid == null) return;
+    if (uid == null) throw Exception('User not authenticated');
     await _datasource.addMessage(uid, ChatMessageModel.fromEntity(message));
   }
 
   @override
   Future<void> clearMessages() async {
     final uid = _uid;
-    if (uid == null) return;
+    if (uid == null) throw Exception('User not authenticated');
     await _datasource.clearMessages(uid);
   }
 }

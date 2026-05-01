@@ -38,11 +38,16 @@ class FirestoreChatHistoryDatasource implements ChatHistoryDatasource {
 
   @override
   Future<void> clearMessages(String uid) async {
-    final snapshot = await _messagesRef(uid).get();
-    final batch = _firestore.batch();
-    for (final doc in snapshot.docs) {
-      batch.delete(doc.reference);
-    }
-    await batch.commit();
+    const batchLimit = 500;
+    QuerySnapshot<ChatMessageModel> snapshot;
+    do {
+      snapshot = await _messagesRef(uid).limit(batchLimit).get();
+      if (snapshot.docs.isEmpty) break;
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } while (snapshot.docs.length == batchLimit);
   }
 }

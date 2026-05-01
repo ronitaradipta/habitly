@@ -13,6 +13,14 @@ class GroqAiChatRepository implements AiChatRepository {
     required String message,
     required List<ChatMessage> history,
     required List<Habit> habits,
+    CreateHabitCallback? onCreateHabit,
+    void Function(String)? onToolStatus,
   }) =>
-      _service.sendMessage(message: message, history: history, habits: habits);
+      _service.sendMessage(
+        message: message,
+        history: history,
+        habits: habits,
+        onCreateHabit: onCreateHabit,
+        onToolStatus: onToolStatus,
+      );
 }

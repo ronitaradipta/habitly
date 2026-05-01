@@ -8,7 +8,9 @@ class ToggleHabitCompletionUseCase {
 
   Future<void> call(String habitId, DateTime date) async {
     final habit = await _habitRepository.getHabitById(habitId);
-    if (habit == null) return;
+    if (habit == null) {
+      throw Exception('Habit not found. It may have been deleted.');
+    }
 
     final key = Habit.dateKey(date);
     final currentStatus = habit.completedDates[key] == true;
